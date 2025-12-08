@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Editar equipo: ' + ${equipo.nombre}">Editar equipo</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-4">
+    <h2 th:text="'Editar equipo: ' + ${equipo.nombre}"></h2>
+
+    <form th:action="@{/equipos/{id}/editar(id=${equipo.id})}" method="post" class="mt-3">
+        <input th:if="${_csrf != null}" type="hidden"
+               th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="form-group">
+            <label>Nuevo nombre</label>
+            <input type="text" name="nombre" class="form-control"
+                   th:value="${equipo.nombre}" required>
+        </div>
+        <button class="btn btn-primary mt-2">Guardar</button>
+        <a class="btn btn-secondary mt-2" th:href="@{/equipos/{id}(id=${equipo.id})}">Cancelar</a>
+    </form>
+</div>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+</body>
+</html>

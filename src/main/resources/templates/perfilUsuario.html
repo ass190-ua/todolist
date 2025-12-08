@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Mi perfil')"></head>
+<body>
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-3" th:object="${usuario}">
+    <h2>Mi perfil</h2>
+
+    <!-- Mensajes flash -->
+    <div th:if="${msgPerfilOk != null}" class="alert alert-success" th:text="${msgPerfilOk}"></div>
+    <div th:if="${msgPasswordOk != null}" class="alert alert-success" th:text="${msgPasswordOk}"></div>
+    <div th:if="${msgPasswordError != null}" class="alert alert-danger" th:text="${msgPasswordError}"></div>
+
+    <!-- Datos básicos -->
+    <form th:action="@{/perfil}" method="post" class="mt-3">
+        <div class="form-group">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" class="form-control" type="text" th:field="*{nombre}">
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="email">Email</label>
+            <input id="email" class="form-control" type="email" th:field="*{email}">
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="fechaNacimiento">Fecha de nacimiento</label>
+            <input id="fechaNacimiento" class="form-control" type="date"
+                   th:field="*{fechaNacimiento}">
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Guardar cambios</button>
+    </form>
+
+    <hr class="mt-4"/>
+
+    <!-- Cambio de contraseña -->
+    <h3>Cambiar contraseña</h3>
+    <form th:action="@{/perfil/password}" th:object="${passwordForm}" method="post" class="mt-3">
+        <div class="form-group">
+            <label for="passwordActual">Contraseña actual</label>
+            <input id="passwordActual" class="form-control" type="password"
+                   th:field="*{passwordActual}">
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="passwordNueva">Nueva contraseña</label>
+            <input id="passwordNueva" class="form-control" type="password"
+                   th:field="*{passwordNueva}">
+        </div>
+
+        <div class="form-group mt-2">
+            <label for="passwordRepetida">Repetir nueva contraseña</label>
+            <input id="passwordRepetida" class="form-control" type="password"
+                   th:field="*{passwordRepetida}">
+        </div>
+
+        <button type="submit" class="btn btn-warning mt-3">Cambiar contraseña</button>
+    </form>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Equipos</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-3">Equipos</h1>
+
+    <!-- Mostrar botón para crear equipo solo si está logueado -->
+    <div th:if="${logeado}" class="mb-3">
+        <form th:action="@{/equipos/nuevo}" method="post" class="form-inline">
+            <input th:if="${_csrf != null}" type="hidden"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="text" name="nombre" placeholder="Nombre del nuevo equipo"
+                   class="form-control mr-2" required>
+            <button type="submit" class="btn btn-primary">Crear equipo</button>
+        </form>
+    </div>
+
+    <!-- Mostrar mensaje si no hay equipos -->
+    <p th:if="${#lists.isEmpty(equipos)}">No hay equipos aún.</p>
+
+    <!-- Tabla de equipos -->
+    <table th:if="${!#lists.isEmpty(equipos)}" class="table table-striped table-bordered">
+        <thead class="thead-light">
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${equipos}">
+            <td th:text="${e.nombre}">Nombre</td>
+            <td>
+                <a th:href="@{'/equipos/' + ${e.id}}" class="btn btn-sm btn-info">
+                    Ver miembros
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${logeado}">
+        <a class="btn btn-link" th:href="@{/usuarios/{id}/tareas(id=${usuarioSesion.id})}">← Volver atrás</a>
+    </p>
+    <p th:if="${!logeado}">
+        <a class="btn btn-link" th:href="@{/login}">← Ir a login</a>
+    </p>
+</div>
+
+<script th:src="@{/js/bootstrap.min.js}"></script>
+</body>
+</html>

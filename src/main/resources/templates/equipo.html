@@ -1,0 +1,63 @@
+<!-- src/main/resources/templates/equipo.html -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="'Equipo: ' + ${equipo.nombre}">Equipo</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 th:text="${equipo.nombre}">Equipo</h1>
+
+    <!-- Botones de administración -->
+    <div class="mb-3" th:if="${logeado} and ${esAdmin}">
+        <a class="btn btn-warning btn-sm" th:href="@{/equipos/{id}/editar(id=${equipo.id})}">
+            Renombrar
+        </a>
+        <form th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}" method="post" style="display:inline">
+            <input th:if="${_csrf != null}" type="hidden"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button class="btn btn-danger btn-sm" onclick="return confirm('¿Eliminar el equipo?');">
+                Eliminar
+            </button>
+        </form>
+    </div>
+
+    <!-- Form para añadir usuarios (solo visible al admin) -->
+    <div class="mb-3" th:if="${logeado} and ${esAdmin}">
+        <form th:action="@{/equipos/{id}/miembro/add(id=${equipo.id})}" method="post" class="form-inline">
+            <input th:if="${_csrf != null}" type="hidden"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <div class="form-group">
+                <select name="usuarioId" class="form-control mr-2">
+                    <option th:each="u : ${usuariosDisponibles}" th:value="${u.id}"
+                            th:text="${u.email}">usuario</option>
+                </select>
+            </div>
+            <button class="btn btn-success btn-sm">Añadir usuario</button>
+        </form>
+    </div>
+
+    <h2>Miembros</h2>
+    <p th:if="${#lists.isEmpty(usuarios)}">Este equipo no tiene miembros.</p>
+    <ul th:if="${!#lists.isEmpty(usuarios)}">
+        <li th:each="u : ${usuarios}">
+            <span th:text="${u.email}">email@ua</span>
+
+            <!-- Botón para eliminar miembro (solo visible al admin y no sobre el admin del equipo) -->
+            <form th:if="${logeado} and ${u.id} != ${equipo.adminUserId}"
+                  th:action="@{/equipos/{id}/miembro/eliminar-usuario(id=${equipo.id})}" method="post" style="display:inline">
+                <input th:if="${_csrf != null}" type="hidden"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <input type="hidden" name="usuarioId" th:value="${u.id}" />
+                <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este usuario del equipo?');">Eliminar</button>
+            </form>
+        </li>
+    </ul>
+
+    <p><a class="btn btn-link" th:href="@{/equipos}">← Volver al listado</a></p>
+</div>
+
+<script th:src="@{/js/bootstrap.min.js}"></script>
+</body>
+</html>
