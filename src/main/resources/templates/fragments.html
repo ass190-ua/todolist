@@ -5,6 +5,7 @@
     <meta charset="UTF-8"/>
     <title th:text="${titulo}"></title>
     <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
 </head>
 
 <div th:fragment="javascript">
@@ -13,51 +14,51 @@
     <script th:src="@{/js/bootstrap.min.js}"></script>
 </div>
 
-<!-- NAVBAR COMÚN -->
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" th:href="@{/about}">ToDoList</a>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
+    <div class="container">
+        <a class="navbar-brand" th:href="${logeado} ? '/dashboard' : '/about'">
+            <span style="font-size: 1.5rem;">📝</span> ToDoList
+        </a>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent"
-            aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent"
+                aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-    <div id="navbarContent" class="collapse navbar-collapse">
-        <ul class="navbar-nav mr-auto">
-            <!-- Enlace Tareas solo si está logeado -->
-            <li class="nav-item" th:if="${logeado}">
-                <a class="nav-link"
-                   th:href="@{/usuarios/{id}/tareas(id=${usuarioSesion.id})}">Tareas</a>
-            </li>
+        <div id="navbarContent" class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item" th:if="${logeado}">
+                    <a class="nav-link" th:href="@{/usuarios/{id}/tareas(id=${usuarioSesion.id})}">Mis Tareas</a>
+                </li>
+                <li class="nav-item" th:if="${logeado}">
+                    <a class="nav-link" th:href="@{/equipos}">Equipos y Proyectos</a>
+                </li>
+            </ul>
 
-            <!-- Enlace Equipos solo si está logeado -->
-            <li class="nav-item" th:if="${logeado}">
-                <a class="nav-link" th:href="@{/equipos}">Equipos</a>
-            </li>
-        </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item" th:if="${!logeado}">
+                    <a class="btn btn-outline-primary mr-2" th:href="@{/login}">Login</a>
+                </li>
+                <li class="nav-item" th:if="${!logeado}">
+                    <a class="btn btn-primary" th:href="@{/registro}">Registro</a>
+                </li>
 
-        <ul class="navbar-nav ml-auto">
-            <!-- Si NO está logeado: mostrar Login/Registro -->
-            <li class="nav-item" th:if="${!logeado}">
-                <a class="nav-link" th:href="@{/login}">Login</a>
-            </li>
-            <li class="nav-item" th:if="${!logeado}">
-                <a class="nav-link" th:href="@{/registro}">Registro</a>
-            </li>
+                <li class="nav-item dropdown" th:if="${logeado}">
+                    <a class="nav-link dropdown-toggle font-weight-bold" href="#" id="userDropdown" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span th:text="${usuarioSesion.nombre}">Usuario</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right border-0 shadow" aria-labelledby="userDropdown">
+                        <a class="dropdown-item" th:href="@{/perfil}">👤 Mi Cuenta</a>
 
-            <!-- Si está logeado: menú de usuario -->
-            <li class="nav-item dropdown" th:if="${logeado}">
-                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                   th:text="${usuarioSesion.nombre}">Usuario</a>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
-                    <a class="dropdown-item" th:href="@{/perfil}">Cuenta</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" th:href="@{/logout}"
-                       th:text="'Cerrar sesión ' + ${usuarioSesion.nombre}">Cerrar sesión</a>
-                </div>
-            </li>
-        </ul>
+                        <a class="dropdown-item text-info" th:if="${usuarioSesion.admin}" th:href="@{/registrados}">🛠️ Administración</a>
+
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" th:href="@{/logout}">🚪 Cerrar sesión</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
 

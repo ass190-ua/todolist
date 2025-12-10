@@ -31,7 +31,9 @@ public class Usuario implements Serializable {
 
     // La relación es lazy por defecto,
     // es necesario acceder a la lista de tareas para que se carguen
-    @OneToMany(mappedBy = "usuario")
+    //lado inverso
+
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
     Set<Tarea> tareas = new HashSet<>();
 
     // Relación ManyToMany con Equipo (lado inverso)

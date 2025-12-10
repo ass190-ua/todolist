@@ -1,5 +1,7 @@
 package madstodolist.model;
 
+import jdk.internal.icu.text.UnicodeSet;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
@@ -17,7 +19,7 @@ public class Equipo implements Serializable {
     @Column(nullable = false, unique = true)
     private String nombre;
 
-    // 🔹 Relación ManyToMany con Usuario
+    // 🔹 Relación ManyToMany con Usuario LADO  DUEÑO
     @ManyToMany
     @JoinTable(
             name = "equipos_usuarios",
@@ -28,6 +30,14 @@ public class Equipo implements Serializable {
 
     @Column(name = "admin_user_id")
     private Long adminUserId;
+
+    //Relacion con proyecto LADO INVERSO
+    @OneToMany(mappedBy = "equipo", cascade = CascadeType.ALL)
+    private Set<Proyecto> proyectos = new HashSet<>();
+
+    //LADO INVERSO
+    @OneToMany(mappedBy="equipo")
+    private Set<Tarea> tareas = new HashSet<>();
 
     // 🔹 Constructor vacío requerido por JPA
     public Equipo() { }
@@ -50,22 +60,41 @@ public class Equipo implements Serializable {
 
     public Set<Usuario> getUsuarios() { return usuarios; }
 
-    public void setUsuarios(Set<Usuario> usuarios) { this.usuarios = usuarios; }
-
     public Long getAdminUserId() { return adminUserId; }
 
     public void setAdminUserId(Long adminUserId) { this.adminUserId = adminUserId; }
 
+    public Set<Proyecto> getProyectos() { return proyectos; }
+
+    public Set<Tarea> getTareas() { return tareas; }
+
+    public void addProyecto(Proyecto proyecto) {
+        if (!proyectos.contains(proyecto)) {
+            proyectos.add(proyecto);
+            proyecto.setEquipo(this);
+        }
+    }
+
     // 🔹 Helpers de dominio
     public void addUsuario(Usuario usuario) {
-        this.usuarios.add(usuario);
-        usuario.getEquipos().add(this); // mantiene bidireccionalidad
+        if (!usuarios.contains(usuario)) {
+            usuarios.add(usuario);
+            usuario.getEquipos().add(this);
+        }
+    }
+
+    public void addTarea(Tarea tarea) {
+        if (!tareas.contains(tarea)) {
+            tareas.add(tarea);
+            // NO llamar tarea.setEquipo(), eso pertenece al lado dueño
+        }
     }
 
     public void removeUsuario(Usuario usuario) {
         this.usuarios.remove(usuario);
         usuario.getEquipos().remove(this);
     }
+
 
     // 🔹 equals y hashCode por nombre (único)
     @Override
@@ -80,4 +109,7 @@ public class Equipo implements Serializable {
     public int hashCode() {
         return Objects.hash(nombre);
     }
+
+
+
 }

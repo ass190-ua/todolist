@@ -50,32 +50,33 @@ public class UsuariosProtegidosWebTests {
     }
 
     @Test
-    void listado_conNoAdmin_devuelve401() throws Exception {
-        mockMvc.perform(get("/registrados").sessionAttr("idUsuarioLogeado", noAdminId))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("No autorizado")));
-    }
-
-    @Test
-    void descripcion_conNoAdmin_devuelve401() throws Exception {
-        mockMvc.perform(get("/registrados/1").sessionAttr("idUsuarioLogeado", noAdminId))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("No autorizado")));
-    }
-
-    @Test
-    void listado_conAdmin_ok() throws Exception {
-        // crea/obtiene admin
+    public void listado_conAdmin_devuelveOK() throws Exception {
         UsuarioData admin = usuarioService.findByEmail("admin@ua.es");
         if (admin == null) {
             admin = new UsuarioData();
-            admin.setEmail("admin@ua.es"); admin.setPassword("12345678");
-            admin.setNombre("Admin"); admin.setAdmin(true);
+            admin.setEmail("admin@ua.es");
+            admin.setPassword("123");
+            admin.setAdmin(true);
             admin = usuarioService.registrar(admin);
         }
 
         mockMvc.perform(get("/registrados").sessionAttr("idUsuarioLogeado", admin.getId()))
                 .andExpect(status().isOk())
-                .andExpect(view().name("listaUsuarios"));
+                // Verificamos que aparece el título nuevo de la vista de administración
+                .andExpect(content().string(containsString("Gestión de Usuarios")));
+    }
+
+    @Test
+    public void listado_conNoAdmin_redirigeALogin() throws Exception {
+        this.mockMvc.perform(get("/registrados"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    public void descripcion_conNoAdmin_redirigeALogin() throws Exception {
+        this.mockMvc.perform(get("/registrados/1"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
     }
 }

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Tablero Kanban')"></head>
+<body>
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2 th:text="${proyecto.nombre}">Nombre del Proyecto</h2>
+            <p class="text-muted" th:text="${proyecto.descripcion}">Descripción...</p>
+        </div>
+        <div class="col-auto">
+            <a th:href="@{/equipos/{id}(id=${proyecto.equipoId})}" class="btn btn-outline-secondary mr-2">Volver al Equipo</a>
+
+            <a th:href="@{/proyectos/{id}/tareas/nueva(id=${proyecto.id})}" class="btn btn-primary">
+                + Añadir Tarea
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-secondary">
+                    Pendiente
+                </div>
+                <div id="columna-pendiente" class="card-body kanban-column" data-status="PENDIENTE" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasPendientes}"
+                         class="card mb-2 shadow-sm border-left-primary task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted">ID: <span th:text="${tarea.id}"></span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-info">
+                    En Curso
+                </div>
+                <div id="columna-en-curso" class="card-body kanban-column" data-status="EN_CURSO" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasEnCurso}"
+                         class="card mb-2 shadow-sm border-left-info task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted">ID: <span th:text="${tarea.id}"></span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-success">
+                    Hecho
+                </div>
+                <div id="columna-terminada" class="card-body kanban-column" data-status="TERMINADA" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasTerminadas}"
+                         class="card mb-2 shadow-sm border-left-success task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" style="text-decoration: line-through;" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted">ID: <span th:text="${tarea.id}"></span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    // Inicializar Sortable para cada columna
+    const columnas = document.querySelectorAll('.kanban-column');
+
+    columnas.forEach(columna => {
+        new Sortable(columna, {
+            group: 'kanban', // Permite mover items entre columnas del mismo grupo
+            animation: 150,  // Animación suave (ms)
+            ghostClass: 'bg-light', // Clase para el elemento fantasma mientras se arrastra
+            onEnd: function (evt) {
+                const item = evt.item; // La tarjeta que se movió
+                const toColumn = evt.to; // La columna destino
+
+                // Si la columna destino es la misma que la origen, no hacemos nada
+                if (evt.from === evt.to) return;
+
+                const tareaId = item.getAttribute('data-id');
+                const nuevoEstado = toColumn.getAttribute('data-status');
+
+                // Llamada AJAX al servidor
+                fetch(`/tareas/${tareaId}/estado`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Si hubiera seguridad CSRF activada, aquí iría el token
+                    },
+                    body: JSON.stringify({ estado: nuevoEstado })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log(`Tarea ${tareaId} movida a ${nuevoEstado}`);
+                            // Opcional: Actualizar visualmente la tarjeta (ej. tachar si es TERMINADA)
+                            actualizarEstiloTarjeta(item, nuevoEstado);
+                        } else {
+                            alert("Error al mover la tarea.");
+                            // Revertir el movimiento visualmente si falla (opcional, requiere lógica extra)
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+
+    function actualizarEstiloTarjeta(card, estado) {
+        const title = card.querySelector('.card-title');
+        // Limpiar clases de borde anteriores
+        card.classList.remove('border-left-primary', 'border-left-info', 'border-left-success');
+
+        if (estado === 'PENDIENTE') {
+            card.classList.add('border-left-primary');
+            title.style.textDecoration = 'none';
+        } else if (estado === 'EN_CURSO') {
+            card.classList.add('border-left-info');
+            title.style.textDecoration = 'none';
+        } else if (estado === 'TERMINADA') {
+            card.classList.add('border-left-success');
+            title.style.textDecoration = 'line-through';
+        }
+    }
+</script>
+
+<style>
+    /* Bordes de colores para identificar estado visualmente */
+    .border-left-primary { border-left: 4px solid #007bff !important; }
+    .border-left-info    { border-left: 4px solid #17a2b8 !important; }
+    .border-left-success { border-left: 4px solid #28a745 !important; }
+</style>
+
+</body>
+</html>

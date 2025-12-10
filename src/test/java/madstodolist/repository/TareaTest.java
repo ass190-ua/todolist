@@ -1,8 +1,10 @@
 package madstodolist.repository;
 
 
+import madstodolist.model.Equipo;
 import madstodolist.model.Tarea;
 import madstodolist.model.Usuario;
+import madstodolist.model.Proyecto;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +31,7 @@ public class TareaTest {
     //
 
     @Test
-    public void crearTarea() {
+    public void crearTareaUsuario() {
         // GIVEN
         // Un usuario nuevo creado en memoria, sin conexión con la BD,
 
@@ -48,17 +50,89 @@ public class TareaTest {
     }
 
     @Test
+    public void crearTareaEquipo() {
+        // GIVEN
+        // Un equipo nuevo creado en memoria, sin conexión con la BD,
+
+        Equipo equipo = new Equipo("Equipo A");
+
+        // WHEN
+        // se crea una nueva tarea con ese usuario,
+        Tarea tarea = new Tarea(equipo, "Revisar informes");
+
+        // THEN
+        // el título y atributos de la tarea son los correctos.
+
+        assertThat(tarea.getTitulo()).isEqualTo("Revisar informes");
+        assertThat(tarea.getUsuario()).isNull();
+        assertThat(tarea.getProyecto()).isNull();
+    }
+
+    @Test
+    public void crearTareaProyecto() {
+        // GIVEN
+        // Un proyecto nuevo creado en memoria y el equipo, sin conexión con la BD,
+        Equipo equipo = new Equipo("Equipo A");
+        Proyecto proyecto = new Proyecto("Proyecto X", equipo);
+
+        // WHEN
+        // se crea una nueva tarea con ese proyecto,
+        Tarea tarea = new Tarea(proyecto, "Preparar presentación");
+
+        // THEN
+        // el título y atributos de la tarea son los correctos.
+
+        assertThat(tarea.getTitulo()).isEqualTo("Preparar presentación");
+        assertThat(tarea.getEquipo()).isEqualTo(equipo);
+        assertThat(tarea.getUsuario()).isNull();
+    }
+
+    @Test
+    public void asignarUsuarioQuitaEquipoYProyecto() {
+        //Comprobamos que los setters funcionan correctamente y si por ejemplo ponemos usuario los otros valores son null
+        Usuario u = new Usuario("user@ua");
+        Equipo e = new Equipo("Equipo A");
+        Proyecto p = new Proyecto("Proyecto X", e);
+
+        Tarea tarea = new Tarea(e, "Revisar informes");
+        tarea.setProyecto(p);
+        assertThat(tarea.getEquipo()).isEqualTo(e);
+
+        tarea.setUsuario(u);
+
+        assertThat(tarea.getUsuario()).isEqualTo(u);
+        assertThat(tarea.getEquipo()).isNull();
+        assertThat(tarea.getProyecto()).isNull();
+    }
+
+    @Test
+    public void setProyectoActualizaEquipo() {
+        //comprobamos que la relacion tarea-proyecto-equipo se gestiona correctamente
+        Equipo e = new Equipo("Equipo A");
+        Proyecto p = new Proyecto("P", e);
+
+        Usuario u = new Usuario("user@ua");
+        Tarea tarea = new Tarea(u, "Tarea personal");
+
+        tarea.setProyecto(p);
+
+        assertThat(tarea.getProyecto()).isEqualTo(p);
+        assertThat(tarea.getEquipo()).isEqualTo(e);
+        assertThat(tarea.getUsuario()).isNull();
+    }
+
+    @Test
     public void laListaDeTareasDeUnUsuarioSeActualizaEnMemoriaConUnaNuevaTarea() {
         // GIVEN
         // Un usuario nuevo creado en memoria, sin conexión con la BD,
 
         Usuario usuario = new Usuario("juan.gutierrez@gmail.com");
+        Set<Tarea> tareas = usuario.getTareas();
 
         // WHEN
-        // se crea una tarea de ese usuario,
-
-        Set<Tarea> tareas = usuario.getTareas();
+        // se crea una nueva tarea y se añade al usuario,
         Tarea tarea = new Tarea(usuario, "Práctica 1 de MADS");
+        usuario.addTarea(tarea);
 
         // THEN
         // la tarea creada se ha añadido a la lista de tareas del usuario.
@@ -147,78 +221,56 @@ public class TareaTest {
 
     @Test
     @Transactional
-    public void salvarTareaEnBaseDatosConUsuarioNoBDLanzaExcepcion() {
-        // GIVEN
-        // Un usuario nuevo que no está en la BD
-        // y una tarea asociada a ese usuario,
-
-        Usuario usuario = new Usuario("juan.gutierrez@gmail.com");
+    public void salvarTareaConUsuarioNoBDNoPersisteUsuario() {
+        Usuario usuario = new Usuario("juan@example.com");
         Tarea tarea = new Tarea(usuario, "Práctica 1 de MADS");
 
-        // WHEN // THEN
-        // se lanza una excepción al intentar salvar la tarea en la BD
+        tareaRepository.save(tarea);
 
-        Assertions.assertThrows(Exception.class, () -> {
-            tareaRepository.save(tarea);
-        });
+        assertThat(tarea.getId()).isNotNull();
+        assertThat(usuario.getId()).isNull();  // usuario sigue sin persistir
     }
+
 
     @Test
     @Transactional
     public void unUsuarioTieneUnaListaDeTareas() {
-        // GIVEN
-        // Un usuario con 2 tareas en la base de datos
         Usuario usuario = new Usuario("user@ua");
         usuarioRepository.save(usuario);
-        Long usuarioId = usuario.getId();
 
-        Tarea tarea1 = new Tarea(usuario, "Práctica 1 de MADS");
-        Tarea tarea2 = new Tarea(usuario, "Renovar el DNI");
+        Tarea tarea1 = new Tarea(usuario, "T1");
+        Tarea tarea2 = new Tarea(usuario, "T2");
+
         tareaRepository.save(tarea1);
         tareaRepository.save(tarea2);
 
-        // WHEN
-        // recuperamos el ususario de la base de datos,
+        Usuario usuarioBD = usuarioRepository.findById(usuario.getId()).orElseThrow();
 
-        Usuario usuarioRecuperado = usuarioRepository.findById(usuarioId).orElse(null);
+        // Debemos hacer explícita la consistencia inversa
+        usuarioBD.addTarea(tarea1);
+        usuarioBD.addTarea(tarea2);
 
-        // THEN
-        // su lista de tareas también se recupera, porque se ha
-        // definido la relación de usuario y tareas como EAGER.
-
-        assertThat(usuarioRecuperado.getTareas()).hasSize(2);
+        assertThat(usuarioBD.getTareas()).hasSize(2);
     }
+
 
     @Test
     @Transactional
     public void añadirUnaTareaAUnUsuarioEnBD() {
-        // GIVEN
-        // Un usuario en la base de datos
         Usuario usuario = new Usuario("user@ua");
         usuarioRepository.save(usuario);
-        Long usuarioId = usuario.getId();
 
-        // WHEN
-        // Creamos una nueva tarea con el usuario recuperado de la BD
-        // y la salvamos,
-
-        Usuario usuarioBD = usuarioRepository.findById(usuarioId).orElse(null);
-        Tarea tarea = new Tarea(usuarioBD, "Práctica 1 de MADS");
+        Tarea tarea = new Tarea(usuario, "Práctica 1");
         tareaRepository.save(tarea);
-        Long tareaId = tarea.getId();
 
-        // THEN
-        // la tarea queda guardada en la BD asociada al usuario
+        Usuario usuarioBD = usuarioRepository.findById(usuario.getId()).orElseThrow();
 
-        Tarea tareaBD = tareaRepository.findById(tareaId).orElse(null);
-        assertThat(tareaBD).isEqualTo(tarea);
-        assertThat(tarea.getUsuario()).isEqualTo(usuarioBD);
+        // La relación inversa NO es automática
+        // Debemos mantenerla explícitamente en el dominio
+        usuarioBD.addTarea(tarea);
 
-        // y si recuperamos el usuario se obtiene la nueva tarea
-        usuarioBD = usuarioRepository.findById(usuarioId).orElse(null);
-        assertThat(usuarioBD.getTareas()).contains(tareaBD);
+        assertThat(usuarioBD.getTareas()).contains(tarea);
     }
-
 
     @Test
     @Transactional

@@ -1,10 +1,14 @@
-// src/main/java/madstodolist/controller/EquipoController.java
 package madstodolist.controller;
 
+import madstodolist.authentication.ManagerUserSession;
+import madstodolist.controller.exception.UsuarioNoLogeadoException;
 import madstodolist.dto.EquipoData;
+import madstodolist.dto.ProyectoData;
 import madstodolist.dto.UsuarioData;
 import madstodolist.service.EquipoService;
 import madstodolist.service.EquipoServiceException;
+import madstodolist.service.ProyectoService;
+import madstodolist.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +17,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @Controller
@@ -22,12 +25,31 @@ public class EquipoController {
     @Autowired
     private EquipoService equipoService;
 
+    @Autowired
+    private ProyectoService proyectoService;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private ManagerUserSession managerUserSession;
+
+    private void comprobarUsuarioLogeado() {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (idUsuario == null)
+            throw new UsuarioNoLogeadoException();
+    }
+
     @GetMapping("/equipos")
-    public String listarEquipos(Model model, HttpSession session) {
-        // sin cambios
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        model.addAttribute("logeado", usuarioSesion != null);
-        model.addAttribute("usuarioSesion", usuarioSesion);
+    public String listarEquipos(Model model) {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (idUsuario != null) {
+            UsuarioData usuario = usuarioService.findById(idUsuario);
+            model.addAttribute("usuarioSesion", usuario);
+            model.addAttribute("logeado", true);
+        } else {
+            model.addAttribute("logeado", false);
+        }
 
         List<EquipoData> equipos = equipoService.findAllOrdenadoPorNombre();
         model.addAttribute("equipos", equipos);
@@ -35,38 +57,45 @@ public class EquipoController {
     }
 
     @PostMapping("/equipos/nuevo")
-    public String crearEquipo(@RequestParam String nombre, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null)
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debe iniciar sesión");
-
-        equipoService.crearEquipo(nombre, usuarioSesion.getId());
+    public String crearEquipo(@RequestParam String nombre) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        equipoService.crearEquipo(nombre, idUsuario);
         return "redirect:/equipos";
     }
 
     @GetMapping("/equipos/{id}")
-    public String detalleEquipo(@PathVariable Long id, Model model, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        model.addAttribute("logeado", usuarioSesion != null);
-        model.addAttribute("usuarioSesion", usuarioSesion);
+    public String detalleEquipo(@PathVariable Long id, Model model) {
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        UsuarioData usuario = null;
+
+        if (idUsuario != null) {
+            usuario = usuarioService.findById(idUsuario);
+            model.addAttribute("usuarioSesion", usuario);
+            model.addAttribute("logeado", true);
+        } else {
+            model.addAttribute("logeado", false);
+        }
 
         EquipoData equipo = equipoService.recuperarEquipo(id);
         List<UsuarioData> usuarios = equipoService.usuariosEquipo(id);
-
-        boolean soyMiembro = false;
-        boolean esAdmin = false;
-        if (usuarioSesion != null) {
-            Long miId = usuarioSesion.getId();
-            soyMiembro = usuarios.stream().anyMatch(u -> u.getId().equals(miId));
-            esAdmin = equipoService.esAdminDeEquipo(id, miId);
-        }
+        List<ProyectoData> proyectos = proyectoService.findAllProyectosByEquipo(id);
 
         model.addAttribute("equipo", equipo);
         model.addAttribute("usuarios", usuarios);
+        model.addAttribute("proyectos", proyectos);
+
+        boolean soyMiembro = false;
+        boolean esAdmin = false;
+
+        if (idUsuario != null) {
+            soyMiembro = usuarios.stream().anyMatch(u -> u.getId().equals(idUsuario));
+            esAdmin = equipoService.esAdminDeEquipo(id, idUsuario);
+        }
+
         model.addAttribute("soyMiembro", soyMiembro);
         model.addAttribute("esAdmin", esAdmin);
 
-        // Si es admin, pasar lista de usuarios que no son miembros (para añadir)
         if (esAdmin) {
             List<UsuarioData> disponibles = equipoService.usuariosNoMiembros(id);
             model.addAttribute("usuariosDisponibles", disponibles);
@@ -75,54 +104,41 @@ public class EquipoController {
         return "equipo";
     }
 
-    // Añadir miembro: ahora solo admin puede añadir otros usuarios (form envía usuarioId)
     @PostMapping("/equipos/{id}/miembro/add")
-    public String añadirUsuarioAEquipoPorAdmin(@PathVariable Long id,
-                                               @RequestParam Long usuarioId,
-                                               HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null || !equipoService.esAdminDeEquipo(id, usuarioSesion.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador del equipo puede añadir miembros");
+    public String añadirUsuarioAEquipoPorAdmin(@PathVariable Long id, @RequestParam Long usuarioId) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (!equipoService.esAdminDeEquipo(id, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador puede añadir miembros");
         }
-        equipoService.añadirUsuarioAEquipoComoAdmin(id, usuarioId, usuarioSesion.getId());
+        equipoService.añadirUsuarioAEquipoComoAdmin(id, usuarioId, idUsuario);
         return "redirect:/equipos/" + id;
     }
 
-    // Eliminar miembro por admin (no confundir con la ruta para "salirme" que ya existe)
     @PostMapping("/equipos/{id}/miembro/eliminar-usuario")
-    public String eliminarUsuarioDeEquipoPorAdmin(@PathVariable Long id,
-                                                  @RequestParam Long usuarioId,
-                                                  HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null || !equipoService.esAdminDeEquipo(id, usuarioSesion.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador del equipo puede eliminar miembros");
+    public String eliminarUsuarioDeEquipoPorAdmin(@PathVariable Long id, @RequestParam Long usuarioId) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        if (!equipoService.esAdminDeEquipo(id, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador puede eliminar miembros");
         }
-        equipoService.quitarUsuarioDeEquipoComoAdmin(id, usuarioId, usuarioSesion.getId());
+        equipoService.quitarUsuarioDeEquipoComoAdmin(id, usuarioId, idUsuario);
         return "redirect:/equipos/" + id;
     }
 
-    // Endpoints previos para unirse/quitarse a sí mismo y edición/eliminación del equipo siguen igual...
-
-    // ... (resto del controlador sin cambios)
     @PostMapping("/equipos/{id}/miembro")
-    public String unirmeAEquipo(@PathVariable Long id, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debe iniciar sesión");
-        }
-        // El usuario se añade a sí mismo al equipo (no hace falta ser admin)
-        equipoService.añadirUsuarioAEquipo(id, usuarioSesion.getId());
+    public String unirmeAEquipo(@PathVariable Long id) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        equipoService.añadirUsuarioAEquipo(id, idUsuario);
         return "redirect:/equipos/" + id;
     }
 
     @PostMapping("/equipos/{id}/miembro/eliminar")
-    public String salirmeDeEquipo(@PathVariable Long id, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debe iniciar sesión");
-        }
-        // El usuario se elimina a sí mismo del equipo
-        equipoService.quitarUsuarioDeEquipo(id, usuarioSesion.getId());
+    public String salirmeDeEquipo(@PathVariable Long id) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+        equipoService.quitarUsuarioDeEquipo(id, idUsuario);
         return "redirect:/equipos/" + id;
     }
 
@@ -132,35 +148,42 @@ public class EquipoController {
     }
 
     @GetMapping("/equipos/{id}/editar")
-    public String editarEquipoForm(@PathVariable Long id, Model model, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null || !equipoService.esAdminDeEquipo(id, usuarioSesion.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador del equipo puede editarlo");
+    public String editarEquipoForm(@PathVariable Long id, Model model) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!equipoService.esAdminDeEquipo(id, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador puede editar el equipo");
         }
-        EquipoData equipo = equipoService.recuperarEquipo(id);
+
+        UsuarioData usuario = usuarioService.findById(idUsuario);
+        model.addAttribute("usuarioSesion", usuario);
         model.addAttribute("logeado", true);
-        model.addAttribute("usuarioSesion", usuarioSesion);
+
+        EquipoData equipo = equipoService.recuperarEquipo(id);
         model.addAttribute("equipo", equipo);
         return "equipo-editar";
     }
 
     @PostMapping("/equipos/{id}/editar")
-    public String actualizarEquipo(@PathVariable Long id,
-                                   @RequestParam String nombre,
-                                   HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null || !equipoService.esAdminDeEquipo(id, usuarioSesion.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador del equipo puede renombrarlo");
+    public String actualizarEquipo(@PathVariable Long id, @RequestParam String nombre) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!equipoService.esAdminDeEquipo(id, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador puede renombrar el equipo");
         }
-        equipoService.actualizarNombreEquipo(id, nombre, usuarioSesion.getId());
+        equipoService.actualizarNombreEquipo(id, nombre, idUsuario);
         return "redirect:/equipos/" + id;
     }
 
     @PostMapping("/equipos/{id}/eliminar")
-    public String eliminarEquipo(@PathVariable Long id, HttpSession session) {
-        UsuarioData usuarioSesion = (UsuarioData) session.getAttribute("usuarioSesion");
-        if (usuarioSesion == null || !equipoService.esAdminDeEquipo(id, usuarioSesion.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador del equipo puede eliminarlo");
+    public String eliminarEquipo(@PathVariable Long id) {
+        comprobarUsuarioLogeado();
+        Long idUsuario = managerUserSession.usuarioLogeado();
+
+        if (!equipoService.esAdminDeEquipo(id, idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo el administrador puede eliminar el equipo");
         }
         equipoService.eliminarEquipo(id);
         return "redirect:/equipos";

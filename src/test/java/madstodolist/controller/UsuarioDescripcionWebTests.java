@@ -59,16 +59,15 @@ public class UsuarioDescripcionWebTests {
                         .sessionAttr("idUsuarioLogeado", adminId))  // <-- sesión de ADMIN
                 .andExpect(status().isOk())
                 .andExpect(view().name("descripcionUsuario"))
-                .andExpect(content().string(containsString("Descripción de usuario")))
-                .andExpect(content().string(containsString("Email")))
+                .andExpect(content().string(containsString("Detalle de Usuario")))
+                .andExpect(content().string(containsString("user@ua")))
                 .andExpect(content().string(not(containsString("Contraseña"))));
     }
 
     @Test
-    void descripcion_sinLogin_lanzaExcepcionDeLogin() throws Exception {
+    void descripcion_sinLogin_redirigeALogin() throws Exception {
         mockMvc.perform(get("/registrados/" + anyUserIdToShow))
-                // puedes ser más explícito si tu handler devuelve 401:
-                // .andExpect(status().isUnauthorized());
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
     }
 }

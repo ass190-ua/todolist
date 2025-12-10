@@ -217,7 +217,7 @@ public class TareaWebTest {
         String listado = "/usuarios/" + usuarioId + "/tareas";
 
         this.mockMvc.perform(get(listado))
-                .andExpect(content().string(containsString("Terminada")));
+                .andExpect(content().string(containsString("Hecho")));
     }
 
 }

@@ -25,11 +25,6 @@ public class LoginController {
     @Autowired
     ManagerUserSession managerUserSession;
 
-    @GetMapping("/")
-    public String home(Model model) {
-        return "redirect:/login";
-    }
-
     @GetMapping("/login")
     public String loginForm(Model model) {
         model.addAttribute("loginData", new LoginData());
@@ -37,30 +32,25 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String loginSubmit(@ModelAttribute LoginData loginData,
-                              Model model,
-                              javax.servlet.http.HttpSession session) {
+    public String loginSubmit(@ModelAttribute LoginData loginData, Model model, HttpSession session) {
 
+        // Llamamos al servicio para intentar loguear
         UsuarioService.LoginStatus loginStatus =
                 usuarioService.login(loginData.geteMail(), loginData.getPassword());
 
+        // CASO 1: Login Correcto
         if (loginStatus == UsuarioService.LoginStatus.LOGIN_OK) {
             UsuarioData usuario = usuarioService.findByEmail(loginData.geteMail());
 
-            // Iniciar sesión
+            // Registramos el usuario en la sesión mediante nuestro Manager
             managerUserSession.logearUsuario(usuario.getId());
-            session.setAttribute("idUsuarioLogeado", usuario.getId());
 
-            session.setAttribute("usuarioSesion", usuario);
-
-            // Admin → listado de usuarios
-            if (Boolean.TRUE.equals(usuario.getAdmin())) {
-                return "redirect:/registrados"; // o "/usuarios" si tienes el alias
-            }
-
-            // Usuario normal → sus tareas
-            return "redirect:/usuarios/" + usuario.getId() + "/tareas";
+            // CAMBIO CLAVE: Redirigimos siempre al Dashboard
+            // Ya no necesitamos 'session.setAttribute' manuales ni ifs de admin
+            return "redirect:/dashboard";
         }
+
+        // CASO 2: Errores de Login
         else if (loginStatus == UsuarioService.LoginStatus.USER_NOT_FOUND) {
             model.addAttribute("error", "No existe usuario");
             return "formLogin";
@@ -70,12 +60,11 @@ public class LoginController {
             return "formLogin";
         }
         else if (loginStatus == UsuarioService.LoginStatus.BLOCKED) {
-            // Usuario bloqueado: NO iniciar sesión
             model.addAttribute("error", "Tu cuenta está bloqueada. Contacta con un administrador.");
             return "formLogin";
         }
 
-        // Fallback (no debería alcanzarse)
+        // Fallback
         model.addAttribute("error", "Error desconocido de autenticación");
         return "formLogin";
     }

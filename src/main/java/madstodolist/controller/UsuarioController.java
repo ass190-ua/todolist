@@ -128,4 +128,24 @@ public class UsuarioController {
 
         return "redirect:/perfil";
     }
+
+    @PostMapping("/usuarios/{id}/eliminar")
+    public String eliminarUsuario(@PathVariable Long id, javax.servlet.http.HttpSession session) {
+        requireLogin();
+
+        // SEGURIDAD: Solo el propio usuario puede borrar su cuenta
+        Long idLogeado = managerUserSession.usuarioLogeado();
+        if (!id.equals(idLogeado)) {
+            throw new UsuarioNoAutorizadoException();
+        }
+
+        // Borramos usuario y sus datos
+        usuarioService.borrarUsuario(id);
+
+        // Cerramos sesión manualmente
+        managerUserSession.logout();
+        session.invalidate(); // Destruye la sesión de Spring
+
+        return "redirect:/login?deleted=true";
+    }
 }

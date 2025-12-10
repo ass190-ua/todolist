@@ -1,0 +1,103 @@
+:root {
+    --primary-color: #0069d9;       /* Azul corporativo */
+    --secondary-color: #6c757d;     /* Gris neutro */
+    --success-color: #28a745;       /* Verde éxito */
+    --info-color: #17a2b8;          /* Cian informativo */
+    --warning-color: #ffc107;       /* Amarillo alerta */
+    --danger-color: #dc3545;        /* Rojo peligro */
+    --light-bg: #f8f9fa;            /* Fondo claro */
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --card-radius: 8px;
+}
+
+body {
+    background-color: #f4f6f9; /* Un gris muy muy suave de fondo para que resalten las tarjetas */
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+}
+
+/* --- MEJORAS EN LA NAVBAR --- */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background-color: #fff !important; /* Forzamos blanco limpio */
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+    letter-spacing: 0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: #555 !important;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* --- TARJETAS (CARDS) --- */
+.card {
+    border: none; /* Quitamos el borde por defecto */
+    border-radius: var(--card-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sombra sutil por defecto */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Efecto hover solo para tarjetas que son enlaces o arrastrables */
+.card-action:hover, .task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: 600;
+}
+
+/* --- BOTONES --- */
+.btn {
+    border-radius: 6px; /* Un poco más redondeados */
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.05);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* --- ESTILOS ESPECÍFICOS DEL KANBAN --- */
+.kanban-column {
+    background-color: #ebecf0; /* Color clásico de fondo de columnas tipo Trello */
+    border-radius: var(--card-radius);
+    padding: 10px;
+}
+
+.task-card {
+    background-color: #fff;
+    cursor: grab;
+    border-left-width: 4px !important; /* Para que se vea bien el color de estado */
+}
+
+.task-card:active {
+    cursor: grabbing;
+}
+
+/* Bordes de estado (reemplaza los inline styles anteriores) */
+.border-left-primary { border-left-color: var(--primary-color) !important; }
+.border-left-info    { border-left-color: var(--info-color) !important; }
+.border-left-success { border-left-color: var(--success-color) !important; }
+
+/* --- AVISOS Y ALERAS --- */
+.alert {
+    border-radius: var(--card-radius);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}

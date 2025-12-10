@@ -129,4 +129,19 @@ public class UsuarioService {
         u = usuarioRepository.save(u);
         return modelMapper.map(u, UsuarioData.class);
     }
+
+    @Transactional
+    public void borrarUsuario(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioServiceException("Usuario no encontrado"));
+
+        // Paso 1: Desvincular al usuario de todos los equipos (tabla intermedia)
+        // Usamos una copia de la lista para evitar errores de concurrencia al borrar
+        for (madstodolist.model.Equipo equipo : new ArrayList<>(usuario.getEquipos())) {
+            equipo.removeUsuario(usuario);
+        }
+
+        // Paso 2: Borrar el usuario (Las tareas se borran solas gracias al CascadeType.ALL del Paso 1)
+        usuarioRepository.delete(usuario);
+    }
 }

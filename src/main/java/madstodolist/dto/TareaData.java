@@ -11,36 +11,25 @@ public class TareaData implements Serializable {
     private Long id;
     private String titulo;
     private Long usuarioId;  // Esta es la ID del usuario asociado
-    private boolean terminada;
+    private String estado;
 
     // Getters y setters
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public void setId(Long id) { this.id = id; }
 
-    public String getTitulo() {
-        return titulo;
-    }
+    public String getTitulo() { return titulo; }
 
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
+    public void setTitulo(String titulo) { this.titulo = titulo; }
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
+    public Long getUsuarioId() { return usuarioId; }
 
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    public void setTerminada(boolean terminada){this.terminada = terminada;}
-    public boolean getTerminada(){return terminada;}
+    public String getEstado() { return estado; }
+
+    public void setEstado(String estado) { this.estado = estado; }
 
     // Sobreescribimos equals y hashCode para que dos tareas sean iguales
     // si tienen el mismo ID (ignoramos el resto de atributos)
@@ -54,7 +43,5 @@ public class TareaData implements Serializable {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    public int hashCode() { return Objects.hash(id); }
 }

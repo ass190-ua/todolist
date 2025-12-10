@@ -1,22 +1,25 @@
 package madstodolist.service;
 
-import madstodolist.model.Tarea;
-import madstodolist.repository.TareaRepository;
-import madstodolist.model.Usuario;
-import madstodolist.repository.UsuarioRepository;
+import madstodolist.model.Proyecto;
+import madstodolist.model.Equipo;
 import madstodolist.dto.TareaData;
+import madstodolist.model.EstadoTarea;
+import madstodolist.model.Tarea;
+import madstodolist.model.Usuario;
+import madstodolist.repository.EquipoRepository;
+import madstodolist.repository.ProyectoRepository;
+import madstodolist.repository.TareaRepository;
+import madstodolist.repository.UsuarioRepository;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.modelmapper.ModelMapper;
 
 import java.util.Collections;
 import java.util.List;
-
 import java.util.stream.Collectors;
-
 
 @Service
 public class TareaService {
@@ -26,7 +29,11 @@ public class TareaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     @Autowired
+    private EquipoRepository equipoRepository;
+    @Autowired
     private TareaRepository tareaRepository;
+    @Autowired
+    private ProyectoRepository proyectoRepository;
     @Autowired
     private ModelMapper modelMapper;
 
@@ -42,6 +49,23 @@ public class TareaService {
         return modelMapper.map(tarea, TareaData.class);
     }
 
+    @Transactional
+    public TareaData nuevaTareaProyecto(Long idProyecto, Long idUsuario, String tituloTarea) {
+        logger.debug("Añadiendo tarea " + tituloTarea + " al proyecto " + idProyecto);
+
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new TareaServiceException("Usuario no encontrado"));
+
+        Proyecto proyecto = proyectoRepository.findById(idProyecto)
+                .orElseThrow(() -> new TareaServiceException("Proyecto no encontrado"));
+
+        Tarea tarea = new Tarea(usuario, tituloTarea);
+        tarea.setProyecto(proyecto); // Vinculamos al proyecto
+        tareaRepository.save(tarea);
+
+        return modelMapper.map(tarea, TareaData.class);
+    }
+
     @Transactional(readOnly = true)
     public List<TareaData> allTareasUsuario(Long idUsuario) {
         logger.debug("Devolviendo todas las tareas del usuario " + idUsuario);
@@ -49,13 +73,21 @@ public class TareaService {
         if (usuario == null) {
             throw new TareaServiceException("Usuario " + idUsuario + " no existe al listar tareas ");
         }
-        // Hacemos uso de Java Stream API para mapear la lista de entidades a DTOs.
+
         List<TareaData> tareas = usuario.getTareas().stream()
+                .filter(t -> t.getProyecto() == null) // <--- FILTRO AÑADIDO: Solo tareas sin proyecto
                 .map(tarea -> modelMapper.map(tarea, TareaData.class))
                 .collect(Collectors.toList());
-        // Ordenamos la lista por id de tarea
+
         Collections.sort(tareas, (a, b) -> a.getId() < b.getId() ? -1 : a.getId() == b.getId() ? 0 : 1);
         return tareas;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TareaData> getTareasProyecto(Long idProyecto) {
+        return tareaRepository.findByProyectoId(idProyecto).stream()
+                .map(t -> modelMapper.map(t, TareaData.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -102,18 +134,23 @@ public class TareaService {
     public void terminarTarea(Long id){
         Tarea tarea = tareaRepository.findById(id).orElse(null);
         if (tarea == null ){
-            throw new TareaServiceException("No existe tarea o usuario id");
+            throw new TareaServiceException("No existe tarea con id " + id);
         }
+        tarea.setEstado(EstadoTarea.TERMINADA);
+    }
 
-        tarea.setTerminada(true);
+    @Transactional
+    public void cambiarEstadoTarea(Long id, EstadoTarea nuevoEstado) {
+        Tarea tarea = tareaRepository.findById(id)
+                .orElseThrow(() -> new TareaServiceException("No existe tarea"));
+        tarea.setEstado(nuevoEstado);
     }
 
     @Transactional(readOnly = true)
     public List<TareaData> allTareasUsuarioOrdenadas(Long usuarioId) {
-        return tareaRepository.findByUsuarioIdOrderByTerminadaAscIdAsc(usuarioId)
+        return tareaRepository.findByUsuarioIdAndProyectoIsNullOrderByEstadoAscIdAsc(usuarioId)
                 .stream()
                 .map(t -> modelMapper.map(t, TareaData.class))
                 .collect(Collectors.toList());
     }
-
 }
