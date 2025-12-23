@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Ups! Algo salió mal')"></head>
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0 text-center p-5">
+
+                <div class="mb-4">
+                    <span style="font-size: 5rem;">😕</span>
+                </div>
+
+                <h1 class="font-weight-bold text-dark mb-2">¡Vaya!</h1>
+                <h4 class="text-muted font-weight-normal mb-4">Ha ocurrido un error inesperado</h4>
+
+                <div class="alert alert-light border border-light bg-light rounded px-4 py-3 mb-4 d-inline-block text-left"
+                     style="min-width: 80%;">
+
+                    <div class="d-flex justify-content-between align-items-center mb-1" th:if="${status}">
+                        <span class="badge badge-danger text-uppercase px-2">Código</span>
+                        <span class="font-weight-bold text-dark ml-2" th:text="${status}">500</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-1" th:if="${error}">
+                        <span class="badge badge-secondary text-uppercase px-2">Error</span>
+                        <span class="text-dark ml-2 small text-right" th:text="${error}">Not Found</span>
+                    </div>
+
+                    <div class="mt-2 pt-2 border-top" th:if="${message} and ${message} != 'No message available'">
+                        <small class="text-muted d-block text-uppercase font-weight-bold mb-1" style="font-size: 0.7rem;">Detalle</small>
+                        <span class="text-dark small text-monospace" th:text="${message}">Descripción del error...</span>
+                    </div>
+                </div>
+
+                <p class="text-muted mb-5">
+                    Lo sentimos, no hemos podido encontrar lo que buscabas o ha habido un fallo técnico.
+                    Por favor, intenta volver al inicio.
+                </p>
+
+                <div>
+                    <a th:href="@{/}" class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm">
+                        🏠 Volver al Inicio
+                    </a>
+
+                    <button onclick="history.back()" class="btn btn-outline-secondary px-4 py-2 ml-2 font-weight-bold">
+                        ← Atrás
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

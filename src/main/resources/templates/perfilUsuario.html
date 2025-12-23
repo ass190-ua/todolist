@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Mi perfil')"></head>
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-4 mb-5">
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <h2 class="font-weight-bold text-dark">Mi Perfil</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div th:if="${msgPerfilOk != null}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <span th:text="${msgPerfilOk}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div th:if="${msgPasswordOk != null}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <span th:text="${msgPasswordOk}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div th:if="${msgPasswordError != null}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <span th:text="${msgPasswordError}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="mb-0 font-weight-bold text-primary">Datos Personales</h5>
+                    <p class="text-muted small">Información pública de tu cuenta</p>
+                </div>
+                <div class="card-body">
+
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white shadow"
+                             style="width: 100px; height: 100px; border-radius: 50%; font-size: 3rem; font-weight: bold;">
+                            <span th:text="${#strings.substring(usuario.nombre,0,1).toUpperCase()}">U</span>
+                        </div>
+                        <div class="mt-2 text-muted small">Foto de perfil generada automáticamente</div>
+                    </div>
+
+                    <form th:action="@{/perfil}" method="post" th:object="${usuario}">
+                        <div class="form-group">
+                            <label for="nombre" class="small font-weight-bold text-muted">NOMBRE COMPLETO</label>
+                            <input id="nombre" class="form-control" type="text" th:field="*{nombre}" placeholder="Tu nombre">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email" class="small font-weight-bold text-muted">CORREO ELECTRÓNICO</label>
+                            <input id="email" class="form-control" type="email" th:field="*{email}" placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fechaNacimiento" class="small font-weight-bold text-muted">FECHA DE NACIMIENTO</label>
+                            <input id="fechaNacimiento" class="form-control" type="date"
+                                   th:field="*{fechaNacimiento}">
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h5 class="mb-0 font-weight-bold text-warning">Seguridad</h5>
+                    <p class="text-muted small">Gestión de acceso y contraseña</p>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/perfil/password}" th:object="${passwordForm}" method="post">
+                        <div class="form-group">
+                            <label for="passwordActual" class="small font-weight-bold text-muted">CONTRASEÑA ACTUAL</label>
+                            <input id="passwordActual" class="form-control" type="password"
+                                   th:field="*{passwordActual}" placeholder="••••••••">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="passwordNueva" class="small font-weight-bold text-muted">NUEVA CONTRASEÑA</label>
+                            <input id="passwordNueva" class="form-control" type="password"
+                                   th:field="*{passwordNueva}" placeholder="••••••••">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="passwordRepetida" class="small font-weight-bold text-muted">REPETIR NUEVA CONTRASEÑA</label>
+                            <input id="passwordRepetida" class="form-control" type="password"
+                                   th:field="*{passwordRepetida}" placeholder="••••••••">
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-warning text-white font-weight-bold px-4 shadow-sm">Cambiar Contraseña</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="text-danger font-weight-bold mb-1">Zona de Peligro</h5>
+                        <p class="text-muted mb-0 small">
+                            Una vez elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate antes de continuar.
+                        </p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-danger font-weight-bold" data-toggle="modal" data-target="#modalEliminarCuenta">
+                            Eliminar mi cuenta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalEliminarCuenta" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold">¿Estás absolutamente seguro?</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <span style="font-size: 3rem;">💣</span>
+                </div>
+                <p class="font-weight-bold">Esta acción eliminará tu cuenta de usuario permanentemente.</p>
+                <p class="text-muted small">
+                    Se perderán tus tareas personales. Si eres administrador de algún equipo, podrías dejarlo huérfano.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+
+                <form th:action="@{/usuarios/{id}/eliminar(id=${usuario.id})}" method="post">
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold">Sí, eliminar mi cuenta</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

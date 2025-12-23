@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Dashboard')"></head>
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5 mb-5">
+
+    <div class="row mb-4 align-items-end">
+        <div class="col-md-8">
+            <h2 class="mb-4">
+                <span id="saludo-dinamico">Hola</span>,
+                <span class="font-weight-bold" th:text="${usuario.nombre}">Usuario</span>
+            </h2>
+            <p class="text-muted mb-0">Aquí tienes el resumen de tu actividad.</p>
+        </div>
+        <div class="col-md-4 text-md-right mt-3 mt-md-0">
+            <span class="text-muted small text-uppercase font-weight-bold">Fecha:</span>
+            <span class="font-weight-bold text-dark" th:text="${#dates.format(#dates.createNow(), 'dd MMM yyyy')}">Hoy</span>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100 bg-white">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="text-uppercase text-muted small font-weight-bold mb-0">Estado de Tareas</h6>
+                    </div>
+
+                    <div style="position: relative; height: 180px; width: 100%; margin: 0 auto;">
+                        <canvas id="tareasChart"></canvas>
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-center small text-muted">
+                        <span class="mr-3"><i class="fas fa-circle text-success"></i> Hecho</span>
+                        <span><i class="fas fa-circle text-secondary"></i> Pendiente</span>
+                    </div>
+
+                    <p class="text-muted mt-3 mb-0 small">
+                        Has completado <strong class="text-dark" th:text="${totalTareas - tareasPendientes}">0</strong> de <span th:text="${totalTareas}">0</span> tareas.
+                    </p>
+                </div>
+                <a th:href="@{/usuarios/{id}/tareas(id=${usuario.id})}" class="card-footer bg-white border-0 text-primary small font-weight-bold d-flex justify-content-between">
+                    Gestionar mis tareas <span>&rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100 bg-white">
+                <div class="card-body d-flex flex-column justify-content-center text-center">
+                    <div class="mb-2 text-primary" style="font-size: 2.5rem;">👥</div>
+                    <h3 class="font-weight-bold text-dark mb-0" th:text="${totalEquipos}">0</h3>
+                    <p class="text-muted small text-uppercase font-weight-bold">Equipos Activos</p>
+                </div>
+                <a href="/equipos" class="card-footer bg-white border-0 text-primary small font-weight-bold d-flex justify-content-between">
+                    Ver equipos y proyectos <span>&rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100 bg-primary text-white">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="font-weight-bold mb-3">¿Qué quieres hacer?</h5>
+
+                    <a th:href="@{/usuarios/{id}/tareas/nueva(id=${usuario.id})}"
+                       class="btn btn-light btn-block font-weight-bold mb-2 shadow-sm text-primary text-left">
+                        ✨ Nueva Tarea Personal
+                    </a>
+
+                    <a th:href="@{/usuarios/{id}/calendario(id=${usuario.id})}"
+                       class="btn btn-light btn-block font-weight-bold mb-2 shadow-sm text-primary text-left">
+                        📅 Ver mi Calendario
+                    </a>
+
+                    <a href="/equipos"
+                       class="btn btn-light btn-block font-weight-bold mb-2 shadow-sm text-primary text-left">
+                        🚀 Ir a Equipos y Proyectos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="font-weight-bold text-dark mb-0">Actividad Reciente</h5>
+                    <small class="text-muted">Tus últimas 5 tareas</small>
+                </div>
+                <div class="card-body">
+
+                    <div th:if="${#lists.isEmpty(ultimasTareas)}" class="text-center py-4 text-muted">
+                        <p class="mb-0">No hay actividad reciente.</p>
+                    </div>
+
+                    <div class="table-responsive" th:if="${!#lists.isEmpty(ultimasTareas)}">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="border-top-0 pl-4">Tarea</th>
+                                <th class="border-top-0 text-center">Fecha Límite</th>
+                                <th class="border-top-0 text-center">Estado</th>
+                                <th class="border-top-0 text-right pr-4">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="tarea : ${ultimasTareas}">
+                                <td class="pl-4 font-weight-bold text-dark">
+                                    <span th:text="${tarea.titulo}">Título</span>
+                                </td>
+                                <td class="text-center text-muted small">
+                                    <span th:if="${tarea.fechaLimite != null}">
+                                        <i class="bi bi-calendar-event"></i>
+                                        <span th:text="${#temporals.format(tarea.fechaLimite, 'dd/MM/yyyy')}">01/01/2024</span>
+                                    </span>
+                                    <span th:if="${tarea.fechaLimite == null}" class="text-muted">
+                                        Sin fecha
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    <span th:if="${tarea.estado == 'PENDIENTE'}" class="badge badge-light border text-muted px-2">Pendiente</span>
+                                    <span th:if="${tarea.estado == 'EN_CURSO'}" class="badge badge-info px-2">En Curso</span>
+                                    <span th:if="${tarea.estado == 'TERMINADA'}" class="badge badge-success px-2">Hecho</span>
+                                </td>
+                                <td class="text-right pr-4">
+                                    <a th:href="@{/tareas/{id}(id=${tarea.id})}"
+                                       class="btn btn-sm btn-outline-primary mr-1"
+                                       title="Ver detalles">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/tareas/{id}/editar(id=${tarea.id})}"
+                                       class="btn btn-sm btn-outline-secondary"
+                                       title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+<script th:inline="javascript">
+    // Esperar a que el DOM esté cargado
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Recuperar los datos desde Thymeleaf
+        var pendientes = /*[[${tareasPendientes}]]*/ 5;
+        var total = /*[[${totalTareas}]]*/ 10;
+        var completadas = total - pendientes;
+
+        // Si no hay tareas, ponemos valores visuales por defecto para que no salga vacío
+        var datos = (total === 0) ? [0, 1] : [completadas, pendientes];
+        var colores = (total === 0) ? ['#e9ecef', '#e9ecef'] : ['#28a745', '#6c757d']; // Verde y Gris
+
+        // 2. Configurar el gráfico
+        var ctx = document.getElementById('tareasChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completadas', 'Pendientes'],
+                datasets: [{
+                    data: datos,
+                    backgroundColor: [
+                        '#28a745', // Verde éxito (Bootstrap success)
+                        '#e9ecef'  // Gris muy claro (Bootstrap light/secondary)
+                    ],
+                    hoverBackgroundColor: [
+                        '#218838', // Verde más oscuro
+                        '#dee2e6'  // Gris un poco más oscuro
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%', // Hace el agujero del donut más grande (más moderno)
+                plugins: {
+                    legend: {
+                        display: false // Ocultamos la leyenda por defecto de Chart.js (hicimos la nuestra en HTML)
+                    },
+                    tooltip: {
+                        enabled: (total > 0) // Solo mostrar tooltip si hay tareas reales
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+
+        // --- SALUDO DINÁMICO ---
+        const hora = new Date().getHours();
+        const elementoSaludo = document.getElementById('saludo-dinamico');
+        let saludo = "Hola";
+        let icono = "";
+
+        if (hora >= 6 && hora < 12) {
+            saludo = "Buenos días";
+            icono = "🌅"; // Amanecer
+        } else if (hora >= 12 && hora < 20) {
+            saludo = "Buenas tardes";
+            icono = "☀️"; // Sol
+        } else {
+            saludo = "Buenas noches";
+            icono = "🌙"; // Luna
+        }
+
+        // Actualizamos el texto. Si quieres el icono, descomenta la siguiente línea:
+        elementoSaludo.innerHTML = `${icono} ${saludo}`;
+    });
+</script>
+</body>
+</html>

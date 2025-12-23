@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Equipo: ' + ${equipo.nombre})"></head>
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <span th:text="${mensaje}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <h1 class="display-4" th:text="${equipo.nombre}">Nombre Equipo</h1>
+            <hr>
+        </div>
+    </div>
+
+    <div class="mb-4" th:if="${logeado} and ${esAdmin}">
+        <a class="btn btn-warning btn-sm shadow-sm font-weight-bold text-white"
+           th:href="@{/equipos/{id}/editar(id=${equipo.id})}">
+            ✏ Renombrar Equipo
+        </a>
+        <button class="btn btn-danger btn-sm shadow-sm font-weight-bold ml-1"
+                type="button"
+                data-toggle="modal"
+                data-target="#modalBorrarEquipo">
+            🗑 Eliminar Equipo
+        </button>
+    </div>
+
+    <div class="mb-4" th:if="${logeado} and ${soyMiembro}">
+        <a class="btn btn-info btn-sm shadow-sm font-weight-bold text-white"
+           th:href="@{/equipos/{id}/calendario(id=${equipo.id})}">
+            <i class="bi bi-calendar3"></i> Ver Calendario del Equipo
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+
+            <div th:if="${soyMiembro or esAdmin}">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary font-weight-bold">Proyectos</h3>
+                    <a th:href="@{/equipos/{id}/proyectos/nuevo(id=${equipo.id})}"
+                       class="btn btn-success btn-sm shadow-sm font-weight-bold">
+                        + Nuevo Proyecto
+                    </a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(proyectos)}" class="alert alert-light border text-center shadow-sm">
+                    <p class="mb-0 text-muted">No hay proyectos activos en este equipo.</p>
+                </div>
+
+                <div class="list-group shadow-sm">
+                    <a th:each="proyecto : ${proyectos}"
+                       th:href="@{/proyectos/{id}(id=${proyecto.id})}"
+                       class="list-group-item list-group-item-action flex-column align-items-start border-0 border-bottom">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1 text-dark font-weight-bold" th:text="${proyecto.nombre}">Nombre Proyecto</h5>
+                            <small class="text-primary font-weight-bold">Ir al tablero &rarr;</small>
+                        </div>
+                        <p class="mb-1 text-muted" th:text="${proyecto.descripcion}">Descripción...</p>
+                    </a>
+                </div>
+            </div>
+
+            <div th:if="${soyMiembro or esAdmin}" class="mt-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="text-primary font-weight-bold">
+                        <i class="bi bi-list-task"></i> Tareas Generales
+                    </h3>
+                    <a th:href="@{/equipos/{id}/tareas/nueva(id=${equipo.id})}"
+                       class="btn btn-success btn-sm shadow-sm font-weight-bold">
+                        + Nueva Tarea
+                    </a>
+                </div>
+
+                <div th:if="${#lists.isEmpty(tareas)}" class="alert alert-light border text-center shadow-sm">
+                    <p class="mb-0 text-muted">No hay tareas generales asignadas a este equipo.</p>
+                </div>
+
+                <div class="list-group shadow-sm" th:if="${!#lists.isEmpty(tareas)}">
+                    <a th:each="tarea : ${tareas}"
+                       th:href="@{/tareas/{id}(id=${tarea.id})}"
+                       class="list-group-item list-group-item-action flex-column align-items-start border-0 border-bottom">
+
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <h5 class="mb-1 text-dark font-weight-bold">
+                                <span th:text="${tarea.titulo}">Título de la Tarea</span>
+                                <span class="badge badge-pill ml-2"
+                                      th:classappend="${tarea.estado.toString() == 'TERMINADA'} ? 'badge-success' :
+                                                     (${tarea.estado.toString() == 'EN_CURSO'} ? 'badge-info' : 'badge-warning')"
+                                      th:text="${tarea.estado}">PENDIENTE</span>
+                            </h5>
+                            <small class="text-muted">#<span th:text="${tarea.id}">1</span></small>
+                        </div>
+
+                        <div class="mt-2 d-flex align-items-center text-muted small">
+                            <span class="mr-3">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:if="${tarea.fechaLimite != null}"
+                                      th:text="${#temporals.format(tarea.fechaLimite, 'dd/MM/yyyy')}">01/01/2024</span>
+                                <span th:if="${tarea.fechaLimite == null}" class="font-italic">Sin fecha límite</span>
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div th:unless="${soyMiembro or esAdmin}" class="alert alert-warning shadow-sm mt-2 border-0">
+                <h5 class="alert-heading h6 font-weight-bold">🔒 Contenido restringido</h5>
+                <p class="mb-0 small">Este equipo tiene proyectos y tareas gestionados internamente.
+                    Debes <strong>unirte al equipo</strong> para poder visualizarlos y colaborar.</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 bg-white">
+                <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
+                    <h5 class="mb-0 font-weight-bold text-secondary">Miembros</h5>
+                </div>
+                <div class="card-body pt-0">
+
+                    <ul class="list-unstyled mb-0" th:if="${!#lists.isEmpty(usuarios)}">
+                        <li th:each="u : ${usuarios}" class="mb-2 d-flex justify-content-between align-items-center p-2 rounded hover-bg-light">
+                            <div>
+                                <span class="badge badge-pill badge-light border mr-1">👤</span>
+                                <span th:text="${u.email}" class="font-weight-bold text-dark">email@ua</span>
+                                <span th:if="${u.id == equipo.adminUserId}" class="badge badge-warning ml-1 text-white">Admin</span>
+                            </div>
+
+                            <th:block th:if="${logeado} and ${esAdmin} and ${u.id} != ${equipo.adminUserId}">
+                                <button class="btn btn-outline-danger btn-sm py-0 px-2 rounded-circle"
+                                        type="button"
+                                        data-toggle="modal"
+                                        data-target="#modalEliminarMiembro"
+                                        th:data-id="${u.id}"
+                                        th:data-email="${u.email}"
+                                        title="Eliminar miembro">
+                                    ×
+                                </button>
+                            </th:block>
+                        </li>
+                    </ul>
+                    <p th:if="${#lists.isEmpty(usuarios)}" class="text-muted small">Sin miembros adicionales.</p>
+
+                    <hr th:if="${logeado} and ${esAdmin}">
+                    <form th:if="${logeado} and ${esAdmin}"
+                          th:action="@{/equipos/{id}/miembro/add(id=${equipo.id})}" method="post">
+                        <div class="form-group">
+                            <label class="small text-muted font-weight-bold text-uppercase">Añadir usuario</label>
+                            <div class="input-group input-group-sm">
+                                <select name="usuarioId" class="custom-select">
+                                    <option th:each="u : ${usuariosDisponibles}" th:value="${u.id}"
+                                            th:text="${u.email}">usuario</option>
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary font-weight-bold">Añadir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div th:if="${logeado} and !${soyMiembro} and !${esAdmin}" class="mt-3">
+                        <form th:action="@{/equipos/{id}/miembro(id=${equipo.id})}" method="post">
+                            <button class="btn btn-info btn-block font-weight-bold shadow-sm">Unirme al equipo</button>
+                        </form>
+                    </div>
+                    <div th:if="${logeado} and ${soyMiembro} and !${esAdmin}" class="mt-3">
+                        <form th:action="@{/equipos/{id}/miembro/eliminar(id=${equipo.id})}" method="post">
+                            <button class="btn btn-outline-danger btn-block font-weight-bold">Salir del equipo</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a class="btn btn-link pl-0 text-muted" th:href="@{/equipos}">← Volver al listado de equipos</a>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBorrarEquipo" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold">Eliminar Equipo</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3"><span style="font-size: 3rem;">🏢</span></div>
+                <p class="mb-1 font-weight-bold">¿Estás seguro de eliminar este equipo?</p>
+                <p class="text-muted small">Se eliminarán todos sus proyectos y tareas asociadas. Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+                <form th:action="@{/equipos/{id}/eliminar(id=${equipo.id})}" method="post">
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold">Sí, Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminarMiembro" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title font-weight-bold">Expulsar Miembro</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3"><span style="font-size: 3rem;">👋</span></div>
+                <p class="mb-1">¿Quieres sacar a este usuario del equipo?</p>
+                <h5 class="font-weight-bold text-dark mt-2" id="modalMemberEmail">email@usuario</h5>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+                <form th:action="@{/equipos/{id}/miembro/eliminar-usuario(id=${equipo.id})}" method="post">
+                    <input type="hidden" name="usuarioId" id="inputUsuarioId" value="" />
+                    <button type="submit" class="btn btn-warning text-white px-4 font-weight-bold">Expulsar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+<script>
+    $('#modalEliminarMiembro').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var usuarioId = button.data('id');
+        var email = button.data('email');
+
+        var modal = $(this);
+        modal.find('#modalMemberEmail').text(email);
+        modal.find('#inputUsuarioId').val(usuarioId);
+    });
+</script>
+
+<style>
+    .hover-bg-light:hover { background-color: #f8f9fa; }
+</style>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Registro')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 text-center pt-4">
+                    <h4 class="font-weight-bold text-primary">Crear Cuenta</h4>
+                    <p class="text-muted small">Únete para gestionar tus tareas y equipos</p>
+                </div>
+
+                <div class="card-body px-4">
+                    <form method="post" th:action="@{/registro}" th:object="${registroData}">
+
+                        <div class="form-group">
+                            <label for="eMail" class="small text-muted font-weight-bold">Correo electrónico</label>
+                            <input id="eMail" class="form-control" name="eMail" placeholder="ejemplo@ua.es"
+                                   type="text" th:field="*{email}" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nombre" class="small text-muted font-weight-bold">Nombre completo</label>
+                            <input id="nombre" class="form-control" name="nombre" placeholder="Tu nombre" type="text"
+                                   th:field="*{nombre}" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="small text-muted font-weight-bold">Contraseña</label>
+                            <input id="password" class="form-control" name="password" placeholder="Elige una contraseña segura"
+                                   type="password" th:field="*{password}" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fechaNacimiento" class="small text-muted font-weight-bold">Fecha de nacimiento</label>
+                            <input id="fechaNacimiento" class="form-control" name="fechaNacimiento"
+                                   type="date" th:field="*{fechaNacimiento}"/>
+                        </div>
+
+                        <div class="form-group form-check" th:if="${mostrarCheckboxAdmin}">
+                            <input type="checkbox" class="form-check-input" id="esAdmin" th:field="*{admin}">
+                            <label class="form-check-label small text-muted" for="esAdmin">Registrar como administrador</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-block py-2 mt-4 font-weight-bold">Registrarse</button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-white border-top-0 text-center pb-4">
+                    <span class="text-muted small">¿Ya tienes cuenta?</span>
+                    <a class="small font-weight-bold ml-1" href="/login">Inicia sesión aquí</a>
+                </div>
+            </div>
+
+            <div class="mt-3" th:if="${#fields.hasErrors('${registroData.*}') or error != null}">
+                <div class="alert alert-danger shadow-sm">
+                    <ul class="mb-0 pl-3" th:if="${#fields.hasErrors('${registroData.*}')}">
+                        <li th:each="err : ${#fields.errors('${registroData.*}')}" th:text="${err}"></li>
+                    </ul>
+                    <div th:if="${error != null}" th:text="${error}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

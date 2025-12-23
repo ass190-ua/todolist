@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Tablero Kanban')"></head>
+<body>
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2 th:text="${proyecto.nombre}">Nombre del Proyecto</h2>
+            <p class="text-muted" th:text="${proyecto.descripcion}">Descripción...</p>
+        </div>
+        <div class="col-auto">
+            <a th:href="@{/equipos/{id}(id=${proyecto.equipoId})}" class="btn btn-outline-secondary mr-2">Volver al Equipo</a>
+
+            <a th:href="@{/proyectos/{id}/tareas/nueva(id=${proyecto.id})}" class="btn btn-primary">
+                + Añadir Tarea
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-secondary">
+                    Pendiente
+                </div>
+                <div id="columna-pendiente" class="card-body kanban-column" data-status="PENDIENTE" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasPendientes}"
+                         class="card mb-2 shadow-sm border-left-primary task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:text="${tarea.fechaLimite != null ? #temporals.format(tarea.fechaLimite, 'dd/MM/yyyy') : '—'}"></span>
+                            </small>
+                            <small class="text-muted d-block" th:if="${tarea.usuarioId != null}">
+                                <i class="bi bi-person"></i> <span th:text="${usuariosMap.get(tarea.usuarioId)}">Usuario</span>
+                            </small>
+                            <small class="d-block mt-1">
+                                <span class="badge badge-warning badge-sm"><i class="bi bi-clock"></i> Pendiente</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-info">
+                    En Curso
+                </div>
+                <div id="columna-en-curso" class="card-body kanban-column" data-status="EN_CURSO" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasEnCurso}"
+                         class="card mb-2 shadow-sm border-left-info task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:text="${tarea.fechaLimite != null ? #temporals.format(tarea.fechaLimite, 'dd/MM/yyyy') : '—'}"></span>
+                            </small>
+                            <small class="text-muted d-block" th:if="${tarea.usuarioId != null}">
+                                <i class="bi bi-person"></i> <span th:text="${usuariosMap.get(tarea.usuarioId)}">Usuario</span>
+                            </small>
+                            <small class="d-block mt-1">
+                                <span th:if="${tarea.estado == 'PENDIENTE'}" class="badge badge-warning badge-sm"><i class="bi bi-clock"></i> Pendiente</span>
+                                <span th:if="${tarea.estado == 'EN_CURSO'}" class="badge badge-info badge-sm"><i class="bi bi-arrow-clockwise"></i> En Curso</span>
+                                <span th:if="${tarea.estado == 'TERMINADA'}" class="badge badge-success badge-sm"><i class="bi bi-check-circle"></i> Terminada</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light h-100">
+                <div class="card-header font-weight-bold text-center text-uppercase text-success">
+                    Hecho
+                </div>
+                <div id="columna-terminada" class="card-body kanban-column" data-status="TERMINADA" style="min-height: 200px;">
+                    <div th:each="tarea : ${tareasTerminadas}"
+                         class="card mb-2 shadow-sm border-left-success task-card"
+                         th:data-id="${tarea.id}"
+                         style="cursor: move;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title mb-1" style="text-decoration: line-through;" th:text="${tarea.titulo}">Título Tarea</h6>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:text="${tarea.fechaLimite != null ? #temporals.format(tarea.fechaLimite, 'dd/MM/yyyy') : '—'}"></span>
+                            </small>
+                            <small class="text-muted d-block" th:if="${tarea.usuarioId != null}">
+                                <i class="bi bi-person"></i> <span th:text="${usuariosMap.get(tarea.usuarioId)}">Usuario</span>
+                            </small>
+                            <small class="d-block mt-1">
+                                <span class="badge badge-success badge-sm"><i class="bi bi-check-circle"></i> Terminada</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+    // Inicializar Sortable para cada columna
+    const columnas = document.querySelectorAll('.kanban-column');
+
+    columnas.forEach(columna => {
+        new Sortable(columna, {
+            group: 'kanban', // Permite mover items entre columnas del mismo grupo
+            animation: 150,  // Animación suave (ms)
+            ghostClass: 'kanban-ghost', // Clase personalizada para el "hueco" visual
+            onEnd: function (evt) {
+                const item = evt.item; // La tarjeta que se movió
+                const toColumn = evt.to; // La columna destino
+
+                // Si la columna destino es la misma que la origen, no hacemos nada
+                if (evt.from === evt.to) return;
+
+                const tareaId = item.getAttribute('data-id');
+                const nuevoEstado = toColumn.getAttribute('data-status');
+
+                // Llamada AJAX al servidor
+                fetch(`/tareas/${tareaId}/estado`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ estado: nuevoEstado })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log(`Tarea ${tareaId} movida a ${nuevoEstado}`);
+                            // Actualizar visualmente la tarjeta (borde, tachado e icono)
+                            actualizarEstiloTarjeta(item, nuevoEstado);
+                        } else {
+                            alert("Error al mover la tarea.");
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    });
+
+    // Hacer que las tarjetas sean clickeables para ver detalles
+    document.querySelectorAll('.task-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            const tareaId = this.getAttribute('data-id');
+            window.location.href = `/tareas/${tareaId}`;
+        });
+
+        // Agregar efecto visual de que es clickeable
+        card.style.cursor = 'pointer';
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+
+    function actualizarEstiloTarjeta(card, estado) {
+        const title = card.querySelector('.card-title');
+        const badge = card.querySelector('.badge');
+
+        // Limpiar clases anteriores
+        card.classList.remove('border-left-primary', 'border-left-info', 'border-left-success');
+        if (badge) {
+            badge.classList.remove('badge-warning', 'badge-info', 'badge-success');
+        }
+
+        if (estado === 'PENDIENTE') {
+            card.classList.add('border-left-primary');
+            title.style.textDecoration = 'none';
+            if (badge) {
+                badge.classList.add('badge-warning');
+                // Usamos innerHTML para incluir el icono
+                badge.innerHTML = '<i class="bi bi-clock"></i> Pendiente';
+            }
+        } else if (estado === 'EN_CURSO') {
+            card.classList.add('border-left-info');
+            title.style.textDecoration = 'none';
+            if (badge) {
+                badge.classList.add('badge-info');
+                badge.innerHTML = '<i class="bi bi-arrow-clockwise"></i> En Curso';
+            }
+        } else if (estado === 'TERMINADA') {
+            card.classList.add('border-left-success');
+            title.style.textDecoration = 'line-through';
+            if (badge) {
+                badge.classList.add('badge-success');
+                badge.innerHTML = '<i class="bi bi-check-circle"></i> Terminada';
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Estilo para el hueco donde va a caer la tarjeta (UX mejora) */
+    .kanban-ghost {
+        background-color: #e2e6ea !important;
+        border: 2px dashed #cbd3da;
+        opacity: 0.5;
+    }
+
+    /* Bordes de colores para identificar estado visualmente */
+    .border-left-primary { border-left: 4px solid #007bff !important; }
+    .border-left-info    { border-left: 4px solid #17a2b8 !important; }
+    .border-left-success { border-left: 4px solid #28a745 !important; }
+</style>
+
+</body>
+</html>

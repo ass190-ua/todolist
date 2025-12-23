@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Administración')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="font-weight-bold text-dark mb-0">Gestión de Usuarios</h2>
+                    <p class="text-muted small mb-0">Administra los accesos y roles de la plataforma</p>
+                </div>
+                <div>
+                    <span class="badge badge-white border shadow-sm p-2 text-muted">
+                        Total: <strong class="text-dark" th:text="${#lists.size(usuarios)}">0</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div th:if="${mensaje}" class="alert alert-info shadow-sm border-0 mb-4" th:text="${mensaje}"></div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                            <tr>
+                                <th class="pl-4 border-top-0 text-muted small font-weight-bold">ID</th>
+                                <th class="border-top-0 text-muted small font-weight-bold">USUARIO</th>
+                                <th class="border-top-0 text-muted small font-weight-bold">EMAIL</th>
+                                <th class="border-top-0 text-muted small font-weight-bold text-center">ROL</th>
+                                <th class="border-top-0 text-muted small font-weight-bold text-center">ESTADO</th>
+                                <th class="border-top-0 text-muted small font-weight-bold text-right pr-4">ACCIONES</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="usuario : ${usuarios}" th:classappend="${usuario.bloqueado} ? 'table-secondary text-muted' : ''">
+
+                                <td class="pl-4 align-middle" th:text="${usuario.id}"></td>
+
+                                <td class="align-middle">
+                                    <span th:text="${usuario.nombre}" class="font-weight-bold"></span>
+                                    <span th:if="${usuario.id == usuarioSesion.id}" class="badge badge-pill badge-light border ml-1 text-muted small">Tú</span>
+                                </td>
+
+                                <td class="align-middle" th:text="${usuario.email}"></td>
+
+                                <td class="align-middle text-center">
+                                    <span th:if="${usuario.admin}" class="badge badge-info px-2 shadow-sm text-white">Administrador</span>
+                                    <span th:unless="${usuario.admin}" class="badge badge-light border px-2 text-muted">Usuario</span>
+                                </td>
+
+                                <td class="align-middle text-center">
+                                    <span th:if="${usuario.bloqueado}" class="badge badge-danger px-2 shadow-sm">Bloqueado</span>
+                                    <span th:unless="${usuario.bloqueado}" class="badge badge-success px-2 shadow-sm">Activo</span>
+                                </td>
+
+                                <td class="text-right pr-4 align-middle">
+                                    <div class="btn-group" role="group">
+
+                                        <a class="btn btn-sm btn-outline-secondary"
+                                           th:href="@{/registrados/{id}(id=${usuario.id})}"
+                                           title="Ver detalles">
+                                            👁️
+                                        </a>
+
+                                        <th:block th:if="${usuario.id != usuarioSesion.id}">
+
+                                            <button th:if="${usuario.bloqueado}"
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-success ml-1"
+                                                    data-toggle="modal"
+                                                    data-target="#modalDesbloqueo"
+                                                    th:data-url="@{/registrados/{id}/bloqueo(id=${usuario.id})}"
+                                                    th:data-nombre="${usuario.nombre}"
+                                                    title="Habilitar usuario">
+                                                ✅
+                                            </button>
+
+                                            <button th:unless="${usuario.bloqueado}"
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-danger ml-1"
+                                                    data-toggle="modal"
+                                                    data-target="#modalBloqueo"
+                                                    th:data-url="@{/registrados/{id}/bloqueo(id=${usuario.id})}"
+                                                    th:data-nombre="${usuario.nombre}"
+                                                    title="Bloquear usuario">
+                                                ⛔
+                                            </button>
+
+                                        </th:block>
+
+                                        <button th:if="${usuario.id == usuarioSesion.id}" class="btn btn-sm btn-light ml-1" disabled title="No puedes bloquearte a ti mismo">
+                                            🛡️
+                                        </button>
+
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 pt-3 pb-3">
+                    <small class="text-muted">
+                        <i class="text-info">●</i> Los administradores tienen acceso total.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBloqueo" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold">Confirmar Bloqueo</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3"><span style="font-size: 3rem;">⛔</span></div>
+                <p class="mb-1">Vas a bloquear el acceso a:</p>
+                <h4 class="font-weight-bold text-dark modal-nombre-usuario">Usuario</h4>
+                <p class="text-muted small mt-3">Este usuario no podrá iniciar sesión.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+                <form class="form-modal-accion" method="post" action="">
+                    <button type="submit" class="btn btn-danger px-4 font-weight-bold">Sí, Bloquear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDesbloqueo" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title font-weight-bold">Confirmar Reactivación</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3"><span style="font-size: 3rem;">✅</span></div>
+                <p class="mb-1">Vas a reactivar el acceso a:</p>
+                <h4 class="font-weight-bold text-dark modal-nombre-usuario">Usuario</h4>
+                <p class="text-muted small mt-3">El usuario podrá volver a iniciar sesión inmediatamente.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+                <form class="form-modal-accion" method="post" action="">
+                    <button type="submit" class="btn btn-success px-4 font-weight-bold">Sí, Reactivar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+<script>
+    // Función genérica para configurar el modal al abrirse
+    function configurarModal(event) {
+        var button = $(event.relatedTarget);
+        var urlAccion = button.data('url');
+        var nombreUsuario = button.data('nombre');
+        var modal = $(this);
+
+        modal.find('.modal-nombre-usuario').text(nombreUsuario);
+        modal.find('.form-modal-accion').attr('action', urlAccion);
+    }
+
+    // Asociamos la función a ambos modales
+    $('#modalBloqueo').on('show.bs.modal', configurarModal);
+    $('#modalDesbloqueo').on('show.bs.modal', configurarModal);
+</script>
+
+</body>
+</html>

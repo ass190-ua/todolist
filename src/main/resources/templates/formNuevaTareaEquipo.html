@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Nueva Tarea de Equipo')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h4 class="font-weight-bold text-primary">Nueva Tarea de Equipo</h4>
+                    <p class="text-muted small">
+                        Añadiendo tarea para el equipo: <strong class="text-dark" th:text="${equipo.nombre}">Equipo</strong>
+                    </p>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+                    <form method="post" th:action="@{/equipos/{id}/tareas/nueva(id=${equipo.id})}" th:object="${tareaData}">
+
+                        <div class="form-group mb-4">
+                            <label for="titulo" class="small font-weight-bold text-muted">TÍTULO DE LA TAREA</label>
+                            <input class="form-control form-control-lg" id="titulo" name="titulo" required
+                                   th:field="*{titulo}" type="text" placeholder="Ej: Preparar presentación del proyecto" autofocus/>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="fechaLimite" class="small font-weight-bold text-muted">FECHA LÍMITE</label>
+                            <input class="form-control form-control-lg"
+                                   id="fechaLimite"
+                                   name="fechaLimite"
+                                   type="date"
+                                   th:field="*{fechaLimite}" />
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="estado" class="small font-weight-bold text-muted">ESTADO</label>
+                            <select class="form-control form-control-lg" id="estado" name="estado" th:field="*{estado}">
+                                <option value="PENDIENTE" selected>Pendiente</option>
+                                <option value="EN_CURSO">En Curso</option>
+                                <option value="TERMINADA">Terminada</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo Equipo (fijo, solo lectura) -->
+                        <div class="form-group mb-4">
+                            <label class="small font-weight-bold text-muted">EQUIPO (ASIGNADO AUTOMÁTICAMENTE)</label>
+                            <input class="form-control form-control-lg" type="text"
+                                   th:value="${equipo.nombre}" readonly disabled/>
+                            <small class="form-text text-muted">Esta tarea pertenecerá a este equipo</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="usuarioAsignado" class="small font-weight-bold text-muted">ASIGNAR A UN USUARIO (OPCIONAL)</label>
+                            <select class="form-control form-control-lg" id="usuarioAsignado" name="usuarioAsignado">
+                                <option value="">Sin asignar</option>
+                                <option th:each="usuario : ${usuarios}"
+                                        th:value="${usuario.id}"
+                                        th:text="${usuario.email}">
+                                    Usuario
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">Selecciona un miembro del equipo para asignarle esta tarea</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a class="text-secondary small font-weight-bold"
+                               th:href="@{/equipos/{id}(id=${equipo.id})}" style="text-decoration: none;">
+                                ← Cancelar
+                            </a>
+                            <button class="btn btn-primary px-4 font-weight-bold shadow-sm" type="submit">
+                                Crear Tarea de Equipo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+
+</body>
+</html>

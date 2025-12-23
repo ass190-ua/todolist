@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head (titulo='Bienvenido a ToDoList')"></head>
+<body class="bg-white"> <div th:replace="fragments :: navbar"></div>
+
+<div class="jumbotron jumbotron-fluid bg-white text-center mb-0" style="padding: 5rem 1rem;">
+    <div class="container">
+        <div class="mb-4">
+            <span style="font-size: 4rem;">📝</span>
+        </div>
+        <h1 class="display-4 font-weight-bold text-dark">Organiza tu trabajo, <br>alcanza tus metas.</h1>
+        <p class="lead text-muted mt-3 mb-5" style="max-width: 700px; margin-left: auto; margin-right: auto;">
+            La plataforma definitiva para gestionar tus tareas personales y coordinar proyectos en equipo
+            con la potencia de la metodología Kanban. Simple, rápida y eficaz.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a class="btn btn-success btn-lg px-5 py-3 font-weight-bold shadow-sm mr-3" href="/registro">
+                🚀 Crear Cuenta Gratis
+            </a>
+            <a class="btn btn-outline-primary btn-lg px-5 py-3 font-weight-bold shadow-sm" href="/login">
+                Iniciar Sesión
+            </a>
+        </div>
+
+        <p class="mt-4 small text-muted">No se requiere tarjeta de crédito · Open Source</p>
+    </div>
+</div>
+
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center">
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm bg-white p-4">
+                    <div class="card-body">
+                        <div class="text-primary mb-3" style="font-size: 2.5rem;">✅</div>
+                        <h5 class="card-title font-weight-bold">Gestión de Tareas</h5>
+                        <p class="card-text text-muted">
+                            Mantén tus pendientes bajo control. Crea, edita y completa tus tareas personales de forma intuitiva.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm bg-white p-4">
+                    <div class="card-body">
+                        <div class="text-warning mb-3" style="font-size: 2.5rem;">📋</div>
+                        <h5 class="card-title font-weight-bold">Tableros Kanban</h5>
+                        <p class="card-text text-muted">
+                            Visualiza el flujo de trabajo. Mueve tarjetas entre "Pendiente", "En Curso" y "Terminado" con un clic.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm bg-white p-4">
+                    <div class="card-body">
+                        <div class="text-info mb-3" style="font-size: 2.5rem;">👥</div>
+                        <h5 class="card-title font-weight-bold">Trabajo en Equipo</h5>
+                        <p class="card-text text-muted">
+                            Crea equipos, asigna administradores y colabora en proyectos compartidos en tiempo real.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 bg-white border-top">
+    <div class="container">
+        <p class="mb-1 text-muted small">© 2025 ToDoList App. Desarrollado por Equipo-04.</p>
+        <div>
+            <a href="/about" class="text-secondary small">Acerca del proyecto</a>
+            <span class="text-muted mx-1">·</span>
+        </div>
+    </div>
+</footer>
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Detalle de Usuario')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center py-4"
+                     style="border-top-left-radius: 8px; border-top-right-radius: 8px;">
+
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-white text-primary shadow"
+                         style="width: 80px; height: 80px; border-radius: 50%; font-size: 2.5rem; font-weight: bold;">
+                        <span th:text="${#strings.substring(usuario.nombre,0,1).toUpperCase()}">U</span>
+                    </div>
+
+                    <h3 class="font-weight-bold mb-0" th:text="${usuario.nombre}">Nombre Usuario</h3>
+                    <p class="mb-0 text-white-50" th:text="${usuario.email}">email@ejemplo.com</p>
+                </div>
+
+                <div class="card-body px-5 py-4">
+
+                    <h6 class="text-muted text-uppercase font-weight-bold mb-3 small border-bottom pb-2">Información de la Cuenta</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-5 text-muted font-weight-bold small">ID DE USUARIO</div>
+                        <div class="col-sm-7 font-weight-bold text-dark" th:text="'#' + ${usuario.id}">#1</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-5 text-muted font-weight-bold small">FECHA NACIMIENTO</div>
+                        <div class="col-sm-7" th:text="${usuario.fechaNacimiento != null} ? ${#dates.format(usuario.fechaNacimiento, 'dd/MM/yyyy')} : 'No especificada'">
+                            01/01/1990
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-5 text-muted font-weight-bold small">ROL DEL SISTEMA</div>
+                        <div class="col-sm-7">
+                            <span th:if="${usuario.admin}" class="badge badge-info px-2 text-white shadow-sm">Administrador</span>
+                            <span th:unless="${usuario.admin}" class="badge badge-light border px-2 text-muted">Usuario Estándar</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-5 text-muted font-weight-bold small">ESTADO ACTUAL</div>
+                        <div class="col-sm-7">
+                            <span th:if="${usuario.bloqueado}" class="badge badge-danger px-2 shadow-sm">Bloqueado</span>
+                            <span th:unless="${usuario.bloqueado}" class="badge badge-success px-2 shadow-sm">Activo</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 text-center">
+                        <a th:href="@{/registrados}" class="btn btn-outline-secondary px-4 mr-2">
+                            ← Volver al listado
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

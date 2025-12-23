@@ -1,0 +1,341 @@
+:root {
+    --primary-color: #0069d9;       /* Azul corporativo */
+    --secondary-color: #6c757d;     /* Gris neutro */
+    --success-color: #28a745;       /* Verde éxito */
+    --info-color: #17a2b8;          /* Cian informativo */
+    --warning-color: #ffc107;       /* Amarillo alerta */
+    --danger-color: #dc3545;        /* Rojo peligro */
+    --light-bg: #f8f9fa;            /* Fondo claro */
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --card-radius: 8px;
+}
+
+body {
+    background-color: #f4f6f9; /* Un gris muy muy suave de fondo para que resalten las tarjetas */
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+}
+
+/* --- MEJORAS EN LA NAVBAR --- */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    background-color: #fff !important; /* Forzamos blanco limpio */
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color) !important;
+    letter-spacing: 0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: #555 !important;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* --- TARJETAS (CARDS) --- */
+.card {
+    border: none; /* Quitamos el borde por defecto */
+    border-radius: var(--card-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sombra sutil por defecto */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Efecto hover solo para tarjetas que son enlaces o arrastrables */
+.card-action:hover, .task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: 600;
+}
+
+/* --- BOTONES --- */
+.btn {
+    border-radius: 6px; /* Un poco más redondeados */
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.05);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* --- ESTILOS ESPECÍFICOS DEL KANBAN --- */
+.kanban-column {
+    background-color: #ebecf0; /* Color clásico de fondo de columnas tipo Trello */
+    border-radius: var(--card-radius);
+    padding: 10px;
+}
+
+.task-card {
+    background-color: #fff;
+    cursor: grab;
+    border-left-width: 4px !important; /* Para que se vea bien el color de estado */
+}
+
+.task-card:active {
+    cursor: grabbing;
+}
+
+/* Bordes de estado (reemplaza los inline styles anteriores) */
+.border-left-primary { border-left-color: var(--primary-color) !important; }
+.border-left-info    { border-left-color: var(--info-color) !important; }
+.border-left-success { border-left-color: var(--success-color) !important; }
+
+/* --- AVISOS Y ALERAS --- */
+.alert {
+    border-radius: var(--card-radius);
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- ESTILOS DEL CALENDARIO --- */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    padding: 20px;
+    width: 100%;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    padding: 15px;
+    background-color: #e3f2fd;
+    border-radius: 6px;
+    color: #1976d2;
+    font-size: 1rem;
+}
+
+.calendar-day {
+    min-height: 150px;
+    max-height: 150px;
+    height: 150px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fff;
+    transition: all 0.2s;
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-day:hover {
+    background-color: #f5f5f5;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    border-color: #2196f3;
+}
+
+.calendar-day.empty {
+    background-color: #fafafa;
+    border-color: #f0f0f0;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    background-color: #fafafa;
+    transform: none;
+    box-shadow: none;
+    border-color: #f0f0f0;
+}
+
+.calendar-day.today {
+    border: 3px solid #2196f3;
+    background-color: #e3f2fd;
+}
+
+.calendar-day.has-tasks {
+    border-color: #4caf50;
+}
+
+.day-number {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: #1976d2;
+    flex-shrink: 0;
+}
+
+.calendar-day.today .day-number {
+    color: #1565c0;
+    font-weight: 800;
+    font-size: 1.2rem;
+}
+
+.tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 5px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Scrollbar personalizado para el contenedor de tareas */
+.tasks-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tasks-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.tasks-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.tasks-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.task-badge {
+    font-size: 0.8rem;
+    padding: 7px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.task-badge:hover {
+    transform: translateX(3px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+.task-badge.terminada {
+    background-color: #4caf50;
+    color: #fff;
+}
+
+.task-badge.en-progreso {
+    background-color: #ff9800;
+    color: #fff;
+    font-weight: 700;
+}
+
+.task-badge.pendiente {
+    background-color: #2196f3;
+    color: #fff;
+}
+
+.task-badge.more {
+    background-color: #9c27b0;
+    text-align: center;
+    font-weight: 700;
+    color: #fff;
+    justify-content: center;
+}
+
+/* Estilos para los badges de tipo de tarea */
+.tipo-personal {
+    background-color: #2196f3 !important;
+    color: #fff !important;
+}
+
+.tipo-equipo {
+    background-color: #00bcd4 !important;
+    color: #fff !important;
+}
+
+.tipo-proyecto {
+    background-color: #ff5722 !important;
+    color: #fff !important;
+}
+
+/* Modal de detalles de tarea */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    border-bottom: 2px solid #e0e0e0;
+    padding: 1.5rem;
+    background-color: #f5f5f5;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.modal-footer {
+    border-top: 2px solid #e0e0e0;
+    padding: 1rem 1.5rem;
+    background-color: #f5f5f5;
+}
+
+/* Estilo para la información detallada de la tarea */
+.info-row {
+    padding: 12px;
+    border-left: 4px solid #2196f3;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1rem;
+    color: #333;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+    .calendar-grid {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .calendar-day {
+        min-height: 110px;
+        max-height: 110px;
+        height: 110px;
+        padding: 8px;
+    }
+
+    .day-number {
+        font-size: 0.9rem;
+    }
+
+    .task-badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+}

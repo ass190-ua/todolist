@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Mis Tareas')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-4">
+
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2 class="text-dark font-weight-bold mb-0">Mis Tareas Personales</h2>
+            <a class="btn btn-primary shadow-sm" th:href="@{/usuarios/{id}/tareas/nueva(id=${usuario.id})}">
+                + Nueva Tarea Personal
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert" th:if="${!#strings.isEmpty(mensaje)}">
+                <span th:text="${mensaje}"></span>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                            <tr>
+                                <th class="pl-4 border-top-0 text-muted small font-weight-bold">ID</th>
+                                <th class="border-top-0 text-muted small font-weight-bold">TAREA</th>
+                                <th class="border-top-0 text-muted small font-weight-bold">ESTADO</th>
+                                <th class="text-muted small font-weight-bold">FECHA LÍMITE</th>
+                                <th class="text-right pr-4 border-top-0 text-muted small font-weight-bold">ACCIONES</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="tarea: ${tareas}">
+                                <td class="pl-4 align-middle text-muted" th:text="${tarea.id}"></td>
+                                <td class="align-middle font-weight-bold" th:text="${tarea.titulo}"></td>
+
+                                <td class="align-middle">
+                                    <span th:if="${tarea.estado == 'PENDIENTE'}" class="badge badge-warning px-2 py-1">
+                                        <i class="bi bi-clock"></i> Pendiente
+                                    </span>
+                                    <span th:if="${tarea.estado == 'EN_CURSO'}" class="badge badge-info px-2 py-1">
+                                        <i class="bi bi-arrow-clockwise"></i> En Curso
+                                    </span>
+                                    <span th:if="${tarea.estado == 'TERMINADA'}" class="badge badge-success px-2 py-1">
+                                        <i class="bi bi-check-circle"></i> Terminada
+                                    </span>
+                                </td>
+                                <td class="align-middle text-muted">
+                                    <i class="bi bi-calendar-event"></i>
+                                    <span th:text="${tarea.fechaLimite != null ? #temporals.format(tarea.fechaLimite, 'dd/MM/yyyy') : '—'}"></span>
+                                </td>
+
+                                <td class="text-right pr-4 align-middle">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-sm btn-outline-info mr-1"
+                                           th:href="@{/tareas/{id}(id=${tarea.id})}"
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+
+                                        <form th:if="${tarea.estado != 'TERMINADA'}"
+                                              th:action="@{/tareas/{id}/terminar(id=${tarea.id})}" method="post" style="display:inline;">
+                                            <button class="btn btn-sm btn-outline-success mr-1" title="Marcar como terminada">✔</button>
+                                        </form>
+
+                                        <form th:if="${tarea.estado == 'TERMINADA'}"
+                                              th:action="@{/tareas/{id}/pendiente(id=${tarea.id})}" method="post" style="display:inline;">
+                                            <button class="btn btn-sm btn-outline-warning mr-1" title="Desmarcar (Volver a pendiente)">↩</button>
+                                        </form>
+
+                                        <a class="btn btn-sm btn-outline-primary mr-1"
+                                           th:href="@{/tareas/{id}/editar(id=${tarea.id})}" title="Editar">✏</a>
+
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                type="button"
+                                                data-toggle="modal"
+                                                data-target="#modalBorrarTarea"
+                                                th:data-url="@{/tareas/{id}(id=${tarea.id})}"
+                                                th:data-titulo="${tarea.titulo}"
+                                                title="Borrar tarea">
+                                            🗑
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(tareas)}">
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <p class="mb-0">No tienes tareas personales.</p>
+                                    <small>¡Añade una arriba!</small>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBorrarTarea" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title font-weight-bold">Eliminar Tarea</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <span style="font-size: 3rem;">🗑️</span>
+                </div>
+                <p class="mb-1">¿Estás seguro de que quieres eliminar esta tarea?</p>
+                <h5 class="font-weight-bold text-dark mt-2" id="modalTituloTarea">Título Tarea</h5>
+                <p class="text-muted small mt-3">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pb-4">
+                <button type="button" class="btn btn-light px-4 mr-2" data-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarBorrado" class="btn btn-danger px-4 font-weight-bold">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"/>
+
+<script type="text/javascript">
+    // Variable para guardar la URL temporalmente
+    let urlParaBorrar = '';
+
+    // Cuando se abre el modal, capturamos los datos del botón
+    $('#modalBorrarTarea').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        urlParaBorrar = button.data('url'); // Extraemos la URL de borrado
+        var titulo = button.data('titulo'); // Extraemos el título
+
+        var modal = $(this);
+        modal.find('#modalTituloTarea').text(titulo);
+    });
+
+    // Cuando pulsamos "Sí, Eliminar" en el modal
+    $('#btnConfirmarBorrado').click(function() {
+        if (urlParaBorrar) {
+            fetch(urlParaBorrar, {
+                method: 'DELETE'
+            }).then((res) => {
+                if (res.ok) {
+                    location.reload(); // Recargamos si todo fue bien
+                } else {
+                    alert("Error al borrar la tarea");
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>

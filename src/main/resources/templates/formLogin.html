@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments :: head (titulo='Login')"></head>
+
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 text-center pt-4 pb-0">
+                    <h4 class="font-weight-bold text-primary">Iniciar Sesión</h4>
+                    <p class="text-muted small">Bienvenido de nuevo a ToDoList</p>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${error != null}">
+                        <span th:text="${error}"></span>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <form method="post" th:action="@{/login}" th:object="${loginData}">
+                        <div class="form-group mb-3">
+                            <label for="eMail" class="small text-muted font-weight-bold">CORREO ELECTRÓNICO</label>
+                            <input id="eMail" class="form-control" name="eMail" placeholder="ejemplo@ua.es" type="text" th:field="*{eMail}" required/>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="password" class="small text-muted font-weight-bold">CONTRASEÑA</label>
+                            <input id="password" class="form-control" name="password" placeholder="••••••••" type="password" th:field="*{password}" required/>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block py-2 font-weight-bold">Entrar</button>
+                    </form>
+                </div>
+
+                <div class="card-footer bg-white border-top-0 text-center pb-4">
+                    <span class="text-muted small">¿No tienes cuenta?</span>
+                    <a class="small font-weight-bold ml-1" href="/registro">Regístrate gratis</a>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a class="small text-secondary" href="/about">Acerca de ToDoList</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments::javascript"></div>
+</body>
+</html>

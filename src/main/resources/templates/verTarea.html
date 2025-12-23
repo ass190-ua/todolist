@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="fragments :: head (titulo='Tarea #' + ${tarea.id})"></head>
+<body class="bg-light">
+<div th:replace="fragments :: navbar"></div>
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="mb-4">
+                <h1 class="display-5 mb-3">
+                    <span th:text="${tarea.titulo}">Título de la tarea</span>
+                    <span class="text-muted" style="font-size: 1.5rem;">#<span th:text="${tarea.id}">1</span></span>
+                </h1>
+
+                <div class="d-flex align-items-center mb-3">
+                    <span th:if="${tarea.estado.toString() == 'PENDIENTE'}"
+                          class="badge badge-warning badge-pill mr-2 px-3 py-2">
+                        <i class="bi bi-clock"></i> Pendiente
+                    </span>
+                    <span th:if="${tarea.estado.toString() == 'EN_CURSO'}"
+                          class="badge badge-info badge-pill mr-2 px-3 py-2">
+                        <i class="bi bi-arrow-clockwise"></i> En Curso
+                    </span>
+                    <span th:if="${tarea.estado.toString() == 'TERMINADA'}"
+                          class="badge badge-success badge-pill mr-2 px-3 py-2">
+                        <i class="bi bi-check-circle"></i> Terminada
+                    </span>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold mb-3">
+                        <i class="bi bi-info-circle text-primary"></i> Información de la Tarea
+                    </h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1 text-muted small font-weight-bold">FECHA LÍMITE</p>
+                            <p th:if="${tarea.fechaLimite != null}" class="mb-0">
+                                <i class="bi bi-calendar-event"></i>
+                                <span th:text="${#temporals.format(tarea.fechaLimite, 'dd/MM/yyyy')}">01/01/2024</span>
+                            </p>
+                            <p th:if="${tarea.fechaLimite == null}" class="mb-0 text-muted">
+                                <i>Sin fecha límite</i>
+                            </p>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1 text-muted small font-weight-bold">ESTADO</p>
+                            <p class="mb-0">
+                                <span th:if="${tarea.estado.toString() == 'PENDIENTE'}">
+                                    <i class="bi bi-clock text-warning"></i> Pendiente
+                                </span>
+                                <span th:if="${tarea.estado.toString() == 'EN_CURSO'}">
+                                    <i class="bi bi-arrow-clockwise text-info"></i> En Curso
+                                </span>
+                                <span th:if="${tarea.estado.toString() == 'TERMINADA'}">
+                                    <i class="bi bi-check-circle text-success"></i> Terminada
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div th:if="${propietario != null}" class="row">
+                        <div class="col-12 mb-3">
+                            <p class="mb-1 text-muted small font-weight-bold">PROPIETARIO</p>
+                            <p class="mb-0">
+                                <i class="bi bi-person-circle"></i>
+                                <span th:text="${propietario.nombre != null ? propietario.nombre : propietario.email}">Usuario</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div th:if="${equipo != null}" class="row">
+                        <div class="col-12 mb-3">
+                            <p class="mb-1 text-muted small font-weight-bold">EQUIPO</p>
+                            <p class="mb-0">
+                                <i class="bi bi-people"></i>
+                                <a th:href="@{/equipos/{id}(id=${equipo.id})}"
+                                   th:text="${equipo.nombre}"
+                                   class="text-decoration-none">
+                                    Nombre del Equipo
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div th:if="${proyecto != null}" class="row">
+                        <div class="col-12 mb-3">
+                            <p class="mb-1 text-muted small font-weight-bold">PROYECTO</p>
+                            <p class="mb-0">
+                                <i class="bi bi-folder"></i>
+                                <a th:href="@{/proyectos/{id}(id=${proyecto.id})}"
+                                   th:text="${proyecto.nombre}"
+                                   class="text-decoration-none">
+                                    Nombre del Proyecto
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title font-weight-bold mb-3">
+                        <i class="bi bi-list-check text-primary"></i> Checklist de la Tarea
+                    </h5>
+
+                    <form id="formNuevoItem" class="mb-3">
+                        <div class="input-group">
+                            <input type="text"
+                                   id="nuevoItemTexto"
+                                   class="form-control"
+                                   placeholder="Añadir nuevo item al checklist..."
+                                   required>
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Añadir
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="checklistContainer">
+                        <div th:if="${checklistItems.isEmpty()}" class="text-center py-4 text-muted" id="emptyMessage">
+                            <i class="bi bi-list-check" style="font-size: 3rem;"></i>
+                            <p class="mb-0 mt-2">No hay items en el checklist</p>
+                            <small>Añade items para organizar mejor tu tarea</small>
+                        </div>
+
+                        <ul class="list-group" id="checklistItems" th:if="${!checklistItems.isEmpty()}">
+                            <li th:each="item : ${checklistItems}"
+                                th:id="'item-' + ${item.id}"
+                                class="list-group-item d-flex align-items-center"
+                                th:classappend="${item.completado} ? 'list-group-item-success' : ''">
+
+                                <div class="custom-control custom-checkbox flex-grow-1">
+                                    <input type="checkbox"
+                                           th:id="'checkbox-' + ${item.id}"
+                                           th:checked="${item.completado}"
+                                           th:data-item-id="${item.id}"
+                                           class="custom-control-input checkbox-item">
+                                    <label th:for="'checkbox-' + ${item.id}"
+                                           class="custom-control-label"
+                                           th:classappend="${item.completado} ? 'text-muted' : ''"
+                                           th:style="${item.completado} ? 'text-decoration: line-through;' : ''">
+                                        <span th:text="${item.texto}">Texto del item</span>
+                                    </label>
+                                </div>
+
+                                <button type="button"
+                                        th:data-item-id="${item.id}"
+                                        class="btn btn-sm btn-danger ml-2 btn-borrar-item">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div th:if="${!checklistItems.isEmpty()}" class="mt-3" id="progressContainer">
+                            <small class="text-muted">
+                                <strong id="progressText">
+                                    <span th:text="${#lists.size(checklistItems.?[completado])}">0</span> de
+                                    <span th:text="${#lists.size(checklistItems)}">0</span> completados
+                                </strong>
+                            </small>
+                            <div class="progress mt-1" style="height: 8px;">
+                                <div id="progressBar"
+                                     class="progress-bar bg-success"
+                                     role="progressbar"
+                                     th:style="'width: ' + ${#lists.isEmpty(checklistItems) ? 0 : (#lists.size(checklistItems.?[completado]) * 100 / #lists.size(checklistItems))} + '%'">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <a th:href="@{/tareas/{id}/editar(id=${tarea.id})}"
+                   class="btn btn-primary shadow-sm">
+                    <i class="bi bi-pencil"></i> Editar Tarea
+                </a>
+
+                <button type="button"
+                        class="btn btn-danger shadow-sm"
+                        data-toggle="modal"
+                        data-target="#modalEliminarTarea">
+                    <i class="bi bi-trash"></i> Eliminar Tarea
+                </button>
+
+                <a th:if="${tarea.usuarioId != null}"
+                   th:href="@{/usuarios/{id}/tareas(id=${usuarioLogeado.id})}"
+                   class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-arrow-left"></i> Volver a Mis Tareas
+                </a>
+
+                <a th:if="${tarea.proyectoId != null}"
+                   th:href="@{/proyectos/{id}(id=${tarea.proyectoId})}"
+                   class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-arrow-left"></i> Volver al Proyecto
+                </a>
+                <a th:if="${tarea.proyectoId == null and tarea.equipoId != null}"
+                   th:href="@{/equipos/{id}(id=${tarea.equipoId})}"
+                   class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-arrow-left"></i> Volver al Equipo
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-3 text-muted font-weight-bold">
+                        <i class="bi bi-gear"></i> DETALLES
+                    </h6>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Estado</small>
+                        <span th:if="${tarea.estado.toString() == 'PENDIENTE'}" class="badge badge-warning">Pendiente</span>
+                        <span th:if="${tarea.estado.toString() == 'EN_CURSO'}" class="badge badge-info">En Curso</span>
+                        <span th:if="${tarea.estado.toString() == 'TERMINADA'}" class="badge badge-success">Terminada</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted d-block mb-1">Tipo</small>
+                        <span th:if="${tarea.usuarioId != null and tarea.equipoId == null}" class="badge badge-secondary">
+                            <i class="bi bi-person"></i> Personal
+                        </span>
+                        <span th:if="${tarea.equipoId != null and tarea.proyectoId == null}" class="badge badge-primary">
+                            <i class="bi bi-people"></i> Equipo
+                        </span>
+                        <span th:if="${tarea.proyectoId != null}" class="badge badge-info">
+                            <i class="bi bi-folder"></i> Proyecto
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${equipo != null or proyecto != null}" class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-3 text-muted font-weight-bold">
+                        <i class="bi bi-link-45deg"></i> CONTEXTO
+                    </h6>
+
+                    <div th:if="${equipo != null}" class="mb-2">
+                        <small class="text-muted d-block mb-1">Equipo</small>
+                        <a th:href="@{/equipos/{id}(id=${equipo.id})}"
+                           th:text="${equipo.nombre}"
+                           class="text-decoration-none d-block">
+                            Nombre del Equipo
+                        </a>
+                    </div>
+
+                    <div th:if="${proyecto != null}">
+                        <small class="text-muted d-block mb-1">Proyecto</small>
+                        <a th:href="@{/proyectos/{id}(id=${proyecto.id})}"
+                           th:text="${proyecto.nombre}"
+                           class="text-decoration-none d-block">
+                            Nombre del Proyecto
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminarTarea" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta tarea?</p>
+                <p class="font-weight-bold" th:text="${tarea.titulo}">Título de la tarea</p>
+                <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button"
+                        class="btn btn-danger"
+                        th:attr="onclick=|deleteTarea(${tarea.id})|">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: javascript"></div>
+
+<script th:inline="javascript">
+    // Variables globales
+    const tareaId = /*[[${tarea.id}]]*/ null;
+    const tareaUsuarioId = /*[[${tarea.usuarioId}]]*/ null;
+    const tareaProyectoId = /*[[${tarea.proyectoId}]]*/ null;
+    const tareaEquipoId = /*[[${tarea.equipoId}]]*/ null;
+
+    // --- LÓGICA DE BORRADO ---
+    function deleteTarea(id) {
+        if(!id) return;
+
+        fetch('/tareas/' + id, {
+            method: 'DELETE'
+        }).then(response => {
+            if (response.ok) {
+                // Ocultar modal manualmente antes de redirigir (buena práctica)
+                $('#modalEliminarTarea').modal('hide');
+
+                // Redirigir según el tipo de tarea
+                if (tareaProyectoId) {
+                    window.location.href = '/proyectos/' + tareaProyectoId;
+                } else if (tareaUsuarioId) {
+                    window.location.href = '/usuarios/' + tareaUsuarioId + '/tareas';
+                } else if (tareaEquipoId) {
+                    window.location.href = '/equipos/' + tareaEquipoId;
+                } else {
+                    // Fallback por seguridad
+                    window.location.href = '/dashboard';
+                }
+            } else {
+                alert("Error al eliminar la tarea");
+            }
+        });
+    }
+
+    // --- LÓGICA DEL CHECKLIST ---
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Añadir nuevo item
+        const formNuevoItem = document.getElementById('formNuevoItem');
+        if(formNuevoItem) {
+            formNuevoItem.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const textoInput = document.getElementById('nuevoItemTexto');
+                const texto = textoInput.value.trim();
+
+                if (!texto) return;
+
+                fetch(`/tareas/${tareaId}/checklist`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `texto=${encodeURIComponent(texto)}`
+                })
+                    .then(response => response.json())
+                    .then(item => {
+                        agregarItemAlDOM(item);
+                        textoInput.value = '';
+                        actualizarProgreso();
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        }
+
+        // Event listeners iniciales para items existentes
+        document.querySelectorAll('.checkbox-item').forEach(cb => {
+            cb.addEventListener('change', toggleCheckbox);
+        });
+
+        document.querySelectorAll('.btn-borrar-item').forEach(btn => {
+            btn.addEventListener('click', borrarItem);
+        });
+    });
+
+    // Función para agregar item al DOM
+    function agregarItemAlDOM(item) {
+        const container = document.getElementById('checklistItems');
+        const emptyMessage = document.getElementById('emptyMessage');
+
+        if (emptyMessage) emptyMessage.remove();
+
+        if (!container) {
+            const checklistContainer = document.getElementById('checklistContainer');
+            checklistContainer.innerHTML = '<ul class="list-group" id="checklistItems"></ul>';
+        }
+
+        const ul = document.getElementById('checklistItems');
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex align-items-center';
+        li.id = `item-${item.id}`;
+        li.innerHTML = `
+            <div class="custom-control custom-checkbox flex-grow-1">
+                <input type="checkbox"
+                       id="checkbox-${item.id}"
+                       data-item-id="${item.id}"
+                       class="custom-control-input checkbox-item">
+                <label for="checkbox-${item.id}" class="custom-control-label">
+                    <span>${escapeHtml(item.texto)}</span>
+                </label>
+            </div>
+            <button type="button"
+                    data-item-id="${item.id}"
+                    class="btn btn-sm btn-danger ml-2 btn-borrar-item">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+        ul.appendChild(li);
+
+        li.querySelector('.checkbox-item').addEventListener('change', toggleCheckbox);
+        li.querySelector('.btn-borrar-item').addEventListener('click', borrarItem);
+
+        // Crear barra de progreso si es el primer item
+        if (!document.getElementById('progressContainer')) {
+            const progressHtml = `
+                <div class="mt-3" id="progressContainer">
+                    <small class="text-muted">
+                        <strong id="progressText">0 de 1 completados</strong>
+                    </small>
+                    <div class="progress mt-1" style="height: 8px;">
+                        <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('checklistContainer').insertAdjacentHTML('beforeend', progressHtml);
+        }
+    }
+
+    // Toggle checkbox
+    function toggleCheckbox(e) {
+        const itemId = e.target.dataset.itemId;
+        const isChecked = e.target.checked;
+        const endpoint = isChecked ? 'completar' : 'desmarcar';
+
+        fetch(`/checklist/${itemId}/${endpoint}`, { method: 'PATCH' })
+            .then(response => response.json())
+            .then(item => {
+                const li = document.getElementById(`item-${itemId}`);
+                const label = li.querySelector('label');
+                if (item.completado) {
+                    li.classList.add('list-group-item-success');
+                    label.classList.add('text-muted');
+                    label.style.textDecoration = 'line-through';
+                } else {
+                    li.classList.remove('list-group-item-success');
+                    label.classList.remove('text-muted');
+                    label.style.textDecoration = 'none';
+                }
+                actualizarProgreso();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                e.target.checked = !isChecked;
+            });
+    }
+
+    // Borrar item
+    function borrarItem(e) {
+        const itemId = e.currentTarget.dataset.itemId;
+        if (!confirm('¿Estás seguro de que quieres eliminar este item?')) return;
+
+        fetch(`/checklist/${itemId}`, { method: 'DELETE' })
+            .then(() => {
+                const li = document.getElementById(`item-${itemId}`);
+                if(li) li.remove();
+
+                const ul = document.getElementById('checklistItems');
+                if (ul && ul.children.length === 0) {
+                    ul.remove();
+                    const progressContainer = document.getElementById('progressContainer');
+                    if (progressContainer) progressContainer.remove();
+
+                    document.getElementById('checklistContainer').innerHTML = `
+                    <div class="text-center py-4 text-muted" id="emptyMessage">
+                        <i class="bi bi-list-check" style="font-size: 3rem;"></i>
+                        <p class="mb-0 mt-2">No hay items en el checklist</p>
+                        <small>Añade items para organizar mejor tu tarea</small>
+                    </div>
+                `;
+                } else {
+                    actualizarProgreso();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function actualizarProgreso() {
+        const items = document.querySelectorAll('.checkbox-item');
+        const completados = document.querySelectorAll('.checkbox-item:checked');
+        const total = items.length;
+        if (total === 0) return;
+        const porcentaje = (completados.length / total) * 100;
+
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        if (progressText) progressText.innerHTML = `${completados.length} de ${total} completados`;
+        if (progressBar) progressBar.style.width = `${porcentaje}%`;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+
+</body>
+</html>
